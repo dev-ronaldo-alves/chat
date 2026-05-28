@@ -25,7 +25,6 @@
             overflow: hidden;
             font-family: 'Inter', sans-serif;
         }
-        /* APP CONTAINER - Mobile first */
         .app-container {
             width: 100%;
             max-width: 100%;
@@ -36,7 +35,7 @@
             overflow: hidden;
             position: relative;
         }
-        /* SIDEBAR (lista de conversas) - mobile ocupa 100% quando visível */
+        /* SIDEBAR - mobile overlay */
         .sidebar {
             position: fixed;
             top: 0;
@@ -143,7 +142,7 @@
             font-size: 0.7rem;
             font-weight: bold;
         }
-        /* CHAT AREA - ocupa toda a tela */
+        /* CHAT AREA - full screen */
         .chat-area {
             flex: 1;
             display: flex;
@@ -316,7 +315,6 @@
             max-height: 250px;
             overflow-y: auto;
         }
-        /* Modais responsivos */
         .modal {
             display: none;
             position: fixed;
@@ -473,7 +471,6 @@
     let pendingMessages = new Map();
     let reconnectAttempts = 0;
     let html5QrCode = null;
-    let currentLongPressMsg = null;
 
     // STORAGE
     function saveAll() {
@@ -508,6 +505,7 @@
         localStorage.setItem('p2p_directory', JSON.stringify(userDirectory));
     }
 
+    // Garante que o contato existe (cria se necessário)
     function ensureContactExists(peerId) {
         if (contacts.find(c => c.id === peerId)) return;
         let dirEntry = userDirectory.find(u => u.id === peerId);
@@ -522,6 +520,7 @@
         renderSidebar();
     }
 
+    // Cria conversa se não existir
     function createConversation(contactId, displayName) {
         if (!conversations.find(c => c.contactId === contactId)) {
             conversations.push({ contactId, displayName, lastMessage: '', lastTimestamp: Date.now(), unreadCount: 0 });
@@ -581,7 +580,7 @@
 
     function escapeHtml(str) { return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
 
-    // Long press para mobile (context menu)
+    // Long press para menu de contexto (mobile)
     function attachLongPressMenu() {
         let timer;
         const msgs = document.querySelectorAll('.message');
@@ -641,7 +640,7 @@
         }
     }
 
-    // REDIMENSIONAMENTO DE IMAGEM
+    // Redimensionamento de imagem
     function resizeImage(dataUrl, maxSize = MAX_IMAGE_SIZE) {
         return new Promise((resolve, reject) => {
             const img = new Image();
@@ -772,25 +771,38 @@
         if (conv) { conv.lastMessage = type === 'text' ? content.substring(0,35) : (type === 'image' ? '📷 Imagem' : '📎 Arquivo'); conv.lastTimestamp = Date.now(); saveAll(); renderSidebar(); }
     }
 
+    // FUNÇÃO PRINCIPAL DE ABRIR CONVERSA - GARANTE QUE O INPUT APAREÇA
     function openConversation(contactId) {
+        if (!contactId) return;
         currentConversationId = contactId;
+        
+        // GARANTIR que o contato existe na lista de contatos
+        ensureContactExists(contactId);
+        
         let contact = contacts.find(c => c.id === contactId);
         let conv = conversations.find(c => c.contactId === contactId);
-        if (contact) {
-            document.getElementById('chatContactName').innerText = conv ? conv.displayName : contact.name;
-            document.getElementById('chatAvatar').innerHTML = contact.avatar;
-            document.getElementById('inputArea').style.display = 'flex';
-            renderMessages(contactId);
-            ensureConnection(contactId);
-        } else {
-            document.getElementById('inputArea').style.display = 'none';
-            document.getElementById('chatContactName').innerText = 'Contato inválido';
+        
+        // Atualizar interface do chat
+        document.getElementById('chatContactName').innerText = conv ? conv.displayName : (contact ? contact.name : 'Conversa');
+        document.getElementById('chatAvatar').innerHTML = contact ? contact.avatar : "👤";
+        
+        // FORÇAR exibição do campo de input
+        let inputArea = document.getElementById('inputArea');
+        inputArea.style.display = 'flex';
+        
+        // Renderizar mensagens e conectar
+        renderMessages(contactId);
+        ensureConnection(contactId);
+        
+        // Fechar sidebar em mobile
+        if (window.innerWidth <= 700) {
+            document.getElementById('sidebar').classList.remove('open');
         }
-        if (window.innerWidth <= 700) document.getElementById('sidebar').classList.remove('open');
+        
         renderSidebar();
     }
 
-    // QR SCANNER
+    // QR Scanner
     function startQrScanner(onSuccess) {
         const modal = document.getElementById('scannerModal');
         modal.style.display = 'flex';
@@ -869,7 +881,7 @@
         document.getElementById('reconnectPeerBtn').onclick = () => { initPeer(); document.getElementById('settingsModal').style.display = 'none'; };
         document.getElementById('closeSettingsModal').onclick = () => document.getElementById('settingsModal').style.display = 'none';
 
-        // Busca
+        // Busca de usuários
         document.getElementById('doSearchBtn').onclick = () => {
             let term = document.getElementById('searchUserName').value.toLowerCase();
             let results = userDirectory.filter(u => u.id !== currentUser.id && u.nickname.toLowerCase().includes(term));
@@ -910,7 +922,7 @@
         };
         document.getElementById('searchConv').addEventListener('input', () => renderSidebar());
 
-        // Emoji
+        // Emoji picker
         const emojiList = "😀😃😄😁😆😅😂🤣😊😇🙂🙃😉😌😍🥰😘😗😙😚😋😜😝😛🤑🤗🤭🤫🤔🤐🤨😐😑😶😏😒🙄😬🤥😌😔😪🤤😴😷🤒🤕🤢🤮🤧🥵🥶😎🤓🧐😕😟🙁☹️😮😯😲😳🥺😦😧😨😰😥😢😭😱😖😣😞😓😩😫🥱😤😡😠🤬😈👿💀☠️💩🤡👹👺👻👽🤖👍👎👊✊🤛🤜🤞✌️🤟🤘👌🤏👈👉👆👇☝️✋🤚🖐️🖖👋🤙💪🦵🦶👂👃🧠🦷🦴👀👁️👅👄";
         document.getElementById('emojiPicker').innerHTML = emojiList.split('').map(e => `<span>${e}</span>`).join('');
         let emojiPicker = document.getElementById('emojiPicker');
