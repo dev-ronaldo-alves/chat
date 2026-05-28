@@ -1,944 +1,379 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>GreenChat - P2P Messenger Mobile</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-        body {
-            background: #e0e2e5;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            font-family: 'Inter', sans-serif;
-        }
-        .app-container {
-            width: 100%;
-            max-width: 100%;
-            height: 100vh;
-            background: #fff;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-            position: relative;
-        }
-        /* SIDEBAR - mobile overlay */
-        .sidebar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #f9f9fc;
-            z-index: 30;
-            transform: translateX(-100%);
-            transition: transform 0.25s ease-out;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 2px 0 8px rgba(0,0,0,0.1);
-        }
-        .sidebar.open {
-            transform: translateX(0);
-        }
-        .sidebar-header {
-            padding: 18px 16px;
-            background: #f0f2f5;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #e4e9ef;
-        }
-        .sidebar-header h3 {
-            color: #075e54;
-            font-size: 1.3rem;
-            font-weight: 600;
-        }
-        .sidebar-header .icons i {
-            color: #54656f;
-            font-size: 1.4rem;
-            margin-left: 20px;
-            cursor: pointer;
-            padding: 8px;
-        }
-        .search-box {
-            padding: 10px 16px;
-            background: #ffffff;
-        }
-        .search-box input {
-            width: 100%;
-            padding: 12px 16px;
-            border-radius: 30px;
-            border: 1px solid #e0e4e8;
-            background: #ffffff;
-            font-size: 1rem;
-        }
-        .conversations-list {
-            flex: 1;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-        .conv-item {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            padding: 14px 16px;
-            border-bottom: 1px solid #f0f2f5;
-            cursor: pointer;
-            transition: background 0.1s;
-        }
-        .conv-item:active {
-            background: #e8f0e8;
-        }
-        .conv-avatar {
-            width: 52px;
-            height: 52px;
-            background: #25d366;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            color: white;
-        }
-        .conv-info {
-            flex: 1;
-        }
-        .conv-name {
-            font-weight: 600;
-            color: #111b21;
-            display: flex;
-            justify-content: space-between;
-            font-size: 1rem;
-        }
-        .conv-last-msg {
-            font-size: 0.8rem;
-            color: #667781;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .conv-time {
-            font-size: 0.7rem;
-            color: #8696a0;
-        }
-        .unread-badge {
-            background: #25d366;
-            color: #fff;
-            border-radius: 20px;
-            padding: 3px 9px;
-            font-size: 0.7rem;
-            font-weight: bold;
-        }
-        /* CHAT AREA - full screen */
-        .chat-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: #efeae2;
-            background-image: radial-gradient(circle at 10% 30%, rgba(200, 200, 200, 0.05) 2%, transparent 2.5%);
-            background-size: 28px 28px;
-            height: 100%;
-        }
-        .chat-header {
-            background: #f0f2f5;
-            padding: 12px 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            border-bottom: 1px solid #e4e9ef;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-        .chat-header .back-btn {
-            background: none;
-            border: none;
-            color: #075e54;
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 8px;
-            margin-left: -8px;
-        }
-        .chat-avatar {
-            width: 44px;
-            height: 44px;
-            background: #25d366;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.6rem;
-            color: white;
-        }
-        .chat-contact-info {
-            flex: 1;
-        }
-        .chat-contact-name {
-            font-weight: 600;
-            color: #111b21;
-            font-size: 1rem;
-        }
-        .chat-status {
-            font-size: 0.7rem;
-            color: #25d366;
-        }
-        .chat-actions i {
-            color: #54656f;
-            font-size: 1.3rem;
-            margin-left: 16px;
-            padding: 8px;
-            cursor: pointer;
-        }
-        .messages-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            -webkit-overflow-scrolling: touch;
-        }
-        .message {
-            max-width: 85%;
-            padding: 8px 12px;
-            border-radius: 18px;
-            position: relative;
-        }
-        .message.sent {
-            align-self: flex-end;
-            background: #d9fdd3;
-            border-bottom-right-radius: 4px;
-        }
-        .message.received {
-            align-self: flex-start;
-            background: #ffffff;
-            border-bottom-left-radius: 4px;
-        }
-        .msg-content {
-            font-size: 0.95rem;
-            line-height: 1.4;
-        }
-        .msg-content img {
-            max-width: 100%;
-            max-height: 200px;
-            border-radius: 14px;
-            cursor: pointer;
-        }
-        .msg-meta {
-            font-size: 0.65rem;
-            margin-top: 5px;
-            text-align: right;
-            opacity: 0.7;
-            display: flex;
-            gap: 6px;
-            justify-content: flex-end;
-        }
-        /* Menu de contexto (long press) */
-        .context-menu {
-            position: fixed;
-            background: #ffffff;
-            border-radius: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            padding: 8px 0;
-            z-index: 200;
-            display: none;
-            min-width: 150px;
-        }
-        .context-menu button {
-            background: none;
-            border: none;
-            padding: 12px 20px;
-            width: 100%;
-            text-align: left;
-            font-size: 1rem;
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            color: #111;
-        }
-        .context-menu button:active {
-            background: #f0f2f5;
-        }
-        .input-area {
-            background: #f0f2f5;
-            padding: 10px 12px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border-top: 1px solid #e4e9ef;
-            position: relative;
-        }
-        .input-area textarea {
-            flex: 1;
-            background: #ffffff;
-            border: none;
-            border-radius: 24px;
-            padding: 10px 16px;
-            font-size: 1rem;
-            max-height: 100px;
-            font-family: 'Inter', sans-serif;
-        }
-        .input-area button {
-            background: none;
-            border: none;
-            color: #075e54;
-            font-size: 1.5rem;
-            cursor: pointer;
-            padding: 8px;
-        }
-        .emoji-picker {
-            position: absolute;
-            bottom: 70px;
-            left: 10px;
-            right: 10px;
-            background: #ffffff;
-            border-radius: 28px;
-            padding: 14px;
-            display: none;
-            grid-template-columns: repeat(8, 1fr);
-            gap: 8px;
-            z-index: 200;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-            max-height: 250px;
-            overflow-y: auto;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.6);
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            padding: 16px;
-        }
-        .modal-content {
-            background: #ffffff;
-            border-radius: 32px;
-            width: 100%;
-            max-width: 450px;
-            padding: 24px;
-            max-height: 90%;
-            overflow-y: auto;
-        }
-        .avatar-option {
-            display: inline-block;
-            font-size: 2rem;
-            margin: 5px;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 50%;
-        }
-        .avatar-option.selected {
-            background: #25d366;
-        }
-        .flex-btns {
-            display: flex;
-            gap: 12px;
-            justify-content: flex-end;
-            margin-top: 18px;
-        }
-        button {
-            background: #25d366;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 30px;
-            font-weight: 600;
-            cursor: pointer;
-            color: #fff;
-            font-size: 1rem;
-        }
-        #qrcode {
-            display: flex;
-            justify-content: center;
-            margin: 12px 0;
-        }
-        .loading-toast {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            background: #075e54;
-            color: white;
-            padding: 12px;
-            border-radius: 30px;
-            text-align: center;
-            z-index: 1001;
-            display: none;
-            font-size: 0.9rem;
-        }
-        @media (min-width: 701px) {
-            .app-container {
-                max-width: 1400px;
-                height: 95vh;
-                border-radius: 28px;
-            }
-            .sidebar {
-                position: relative;
-                transform: translateX(0);
-                width: 30%;
-                height: auto;
-                border-radius: 28px 0 0 28px;
-            }
-            .chat-header .back-btn {
-                display: none;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes, maximum-scale=1.0">
+  <title>Chat Seguro P2P · E2EE + Contatos + Emojis + ID Duplo</title>
+  <!-- Favicon (ícone do escudo seguro) -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%23075e54'/%3E%3Cpath fill='%23ffffff' d='M50 15 L22 28 L22 52 C22 68 36 82 50 85 C64 82 78 68 78 52 L78 28 L50 15 Z M46 62 L34 50 L38 46 L46 54 L62 38 L66 42 L46 62 Z'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: #e5ded8; height: 100vh; display: flex; flex-direction: column; overflow: hidden; -webkit-font-smoothing: antialiased; }
+    .chat-app { display: flex; flex-direction: column; height: 100%; max-width: 700px; margin: 0 auto; width: 100%; background: #f8f9fc; box-shadow: 0 0 20px rgba(0,0,0,0.1); position: relative; }
+    .chat-header { background: #075e54; color: white; padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .header-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .chat-title { font-weight: 600; font-size: 0.95rem; background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 30px; }
+    .my-id-card { background: #128c7e; border-radius: 40px; padding: 4px 10px; font-size: 0.7rem; display: flex; align-items: center; gap: 5px; font-family: monospace; max-width: 180px; overflow: hidden; }
+    .my-id-card span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .copy-id-btn { background: none; border: none; color: white; cursor: pointer; padding: 4px; border-radius: 30px; min-width: 32px; }
+    .status-badge { background: #25d366; color: #075e54; padding: 4px 10px; border-radius: 30px; font-size: 0.65rem; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+    .status-offline { background: #cfcfcf; color: #3b3b3b; }
+    .dual-id-panel { background: #f0f4f9; padding: 10px 12px; border-bottom: 1px solid #dce3ec; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 0.7rem; }
+    .id-badge { background: white; border-radius: 28px; padding: 4px 10px; display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; flex: 1 1 auto; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .id-label { font-weight: 700; color: #2c3e66; }
+    .id-value { font-family: monospace; background: #eef2ff; padding: 2px 6px; border-radius: 40px; color: #075e54; font-size: 0.65rem; max-width: 110px; overflow: hidden; text-overflow: ellipsis; }
+    .icon-mini { background: transparent; border: none; font-size: 0.75rem; cursor: pointer; padding: 4px 6px; border-radius: 30px; color: #1f6392; min-width: 32px; }
+    .mode-badge { background: #075e54; color: white; border-radius: 60px; padding: 4px 10px; font-size: 0.65rem; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+    .btn-small { background: #e9ecef; border: none; padding: 6px 10px; border-radius: 30px; font-size: 0.65rem; font-weight: 600; color: #075e54; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+    .connection-panel { background: white; padding: 10px 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; border-bottom: 1px solid #e2e2e2; }
+    .remote-input-group { flex: 3; min-width: 180px; display: flex; gap: 6px; background: #f0f2f5; border-radius: 44px; padding: 4px 12px; align-items: center; }
+    #remotePeerId { flex: 1; border: none; background: transparent; padding: 12px 0; font-size: 0.9rem; outline: none; font-family: monospace; min-height: 44px; }
+    .action-buttons { display: flex; gap: 8px; }
+    .btn { border: none; background: #075e54; color: white; padding: 10px 14px; border-radius: 44px; font-weight: 600; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; min-height: 44px; }
+    .btn-outline { background: #e9ecef; color: #075e54; border: 1px solid #cbd5e1; }
+    .chat-toolbar { display: flex; justify-content: space-between; align-items: center; background: #fefefe; padding: 6px 12px; border-bottom: 1px solid #ececec; flex-wrap: wrap; gap: 8px; }
+    .tool-group { display: flex; gap: 6px; align-items: center; }
+    .icon-btn { background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 8px; border-radius: 50%; color: #075e54; min-width: 44px; min-height: 44px; }
+    .encrypt-badge { background: #2c6e2c; color: white; border-radius: 40px; padding: 6px 12px; font-size: 0.7rem; font-weight: bold; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; }
+    .encrypt-badge.plain { background: #a16207; }
+    .messages-container { flex: 1; overflow-y: auto; padding: 12px 10px; display: flex; flex-direction: column; gap: 10px; background: #e9ecef; scroll-behavior: smooth; }
+    .message-bubble { max-width: 85%; display: flex; flex-direction: column; gap: 3px; animation: fadeIn 0.2s ease; }
+    .message-left { align-self: flex-start; }
+    .message-right { align-self: flex-end; }
+    .bubble { padding: 10px 14px; border-radius: 20px; font-size: 0.9rem; background: white; box-shadow: 0 1px 1px rgba(0,0,0,0.05); }
+    .message-right .bubble { background: #dcf8c6; border-bottom-right-radius: 4px; }
+    .message-left .bubble { border-bottom-left-radius: 4px; }
+    .timestamp { font-size: 0.6rem; color: #6c757d; margin: 0 5px; }
+    .system-message { align-self: center; background: #e2e3e5; color: #383d41; padding: 6px 12px; border-radius: 30px; font-size: 0.7rem; text-align: center; font-style: italic; }
+    .typing-indicator { align-self: flex-start; background: #eef2f3; padding: 6px 14px; border-radius: 20px; font-size: 0.7rem; color: #4a5568; margin-top: 5px; }
+    .chat-footer { background: white; padding: 8px 10px; display: flex; gap: 8px; border-top: 1px solid #e2e2e2; }
+    .input-wrapper { flex: 1; background: #f0f2f5; border-radius: 28px; display: flex; align-items: center; padding: 4px 12px; gap: 6px; }
+    #messageInput { flex: 1; border: none; background: transparent; padding: 12px 4px; font-size: 1rem; outline: none; min-height: 44px; }
+    /* Botão enviar - ícone maior e perfeitamente centralizado */
+    #sendBtn {
+      background: #075e54;
+      border-radius: 50%;
+      width: 54px;
+      height: 54px;
+      padding: 0;
+      min-width: 54px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.1s ease, background 0.2s;
+    }
+    #sendBtn i {
+      font-size: 1.7rem;
+      margin: 0;
+      line-height: 1;
+    }
+    #sendBtn:active {
+      transform: scale(0.96);
+    }
+    .scroll-btn { position: absolute; bottom: 80px; right: 12px; background: #075e54; color: white; border: none; border-radius: 50%; width: 44px; height: 44px; font-size: 1.1rem; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2); z-index: 10; display: flex; align-items: center; justify-content: center; }
+    .emoji-picker-container { position: fixed; bottom: 80px; left: 10px; right: 10px; max-width: 95%; background: white; border-radius: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.3); z-index: 200; display: none; flex-direction: column; overflow: hidden; }
+    @media (min-width: 500px) { .emoji-picker-container { left: auto; right: auto; width: 380px; margin: 0 auto; } }
+    .emoji-picker-header { background: #075e54; color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; }
+    .emoji-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; padding: 14px; max-height: 320px; overflow-y: auto; background: #fefefe; }
+    .emoji-item { font-size: 1.8rem; text-align: center; padding: 8px 4px; cursor: pointer; border-radius: 16px; background: #f2f2f2; min-height: 60px; display: flex; align-items: center; justify-content: center; }
+    .emoji-item:active { background: #cbd5e1; transform: scale(0.94); }
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 300; display: none; align-items: center; justify-content: center; backdrop-filter: blur(3px); }
+    .contacts-modal { background: white; border-radius: 28px; width: 90%; max-width: 450px; max-height: 80vh; display: flex; flex-direction: column; overflow: hidden; }
+    .modal-header { background: #075e54; color: white; padding: 16px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; }
+    .modal-body { padding: 16px; overflow-y: auto; flex: 1; }
+    .contact-form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; background: #f1f5f9; padding: 12px; border-radius: 20px; }
+    .contact-form input { padding: 12px; border-radius: 40px; border: 1px solid #ccc; font-size: 0.9rem; }
+    .contact-form button { background: #075e54; color: white; border: none; padding: 10px; border-radius: 40px; font-weight: bold; cursor: pointer; }
+    .contact-list { display: flex; flex-direction: column; gap: 12px; max-height: 300px; overflow-y: auto; }
+    .contact-item { background: #f8fafc; border-radius: 20px; padding: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; border: 1px solid #e2e8f0; }
+    .contact-info { flex: 3; }
+    .contact-name { font-weight: bold; font-size: 1rem; color: #0f172a; }
+    .contact-id { font-family: monospace; font-size: 0.7rem; color: #475569; word-break: break-all; }
+    .contact-actions { display: flex; gap: 8px; }
+    .contact-actions button { background: transparent; border: none; font-size: 1.1rem; cursor: pointer; padding: 6px; border-radius: 30px; min-width: 36px; }
+    .connect-contact { color: #075e54; }
+    .edit-contact { color: #f59e0b; }
+    .delete-contact { color: #dc2626; }
+    .toast-message { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #323232e6; color: white; padding: 10px 18px; border-radius: 40px; font-size: 0.8rem; z-index: 1000; pointer-events: none; backdrop-filter: blur(8px); white-space: nowrap; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: translateY(0);} }
+    @media (max-width: 768px) { input, textarea, button { font-size: 16px; } .my-id-card { max-width: 140px; } .id-badge { flex: 1 1 100%; } .dual-id-panel .tool-group { width: 100%; justify-content: center; } #sendBtn { width: 52px; height: 52px; } #sendBtn i { font-size: 1.6rem; } }
+    
+    /* ======================= PRELOADER ======================= */
+    .preloader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #075e54 0%, #128c7e 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 20000;
+      transition: opacity 0.6s ease, visibility 0.6s ease;
+    }
+    .preloader-content {
+      text-align: center;
+      color: white;
+      padding: 24px;
+      max-width: 280px;
+      width: 80%;
+    }
+    .preloader-icon {
+      font-size: 4.5rem;
+      margin-bottom: 1.2rem;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.2));
+      animation: pulseIcon 1.2s infinite alternate;
+    }
+    .preloader-title {
+      font-size: 1.7rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 2rem;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .progress-container {
+      background: rgba(255,255,255,0.25);
+      border-radius: 100px;
+      height: 8px;
+      width: 100%;
+      overflow: hidden;
+      margin-bottom: 1rem;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+    }
+    .progress-bar {
+      width: 0%;
+      height: 100%;
+      background: #25d366;
+      border-radius: 100px;
+      animation: loadingProgress 1.8s infinite cubic-bezier(0.45, 0.05, 0.55, 0.95);
+      box-shadow: 0 0 6px #25d366;
+    }
+    .preloader-sub {
+      font-size: 0.8rem;
+      opacity: 0.9;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+    @keyframes loadingProgress {
+      0% { width: 0%; transform: translateX(0); }
+      50% { width: 70%; transform: translateX(5%); }
+      100% { width: 100%; transform: translateX(0); }
+    }
+    @keyframes pulseIcon {
+      0% { transform: scale(0.96); opacity: 0.9; text-shadow: 0 0 0 rgba(255,255,255,0.3); }
+      100% { transform: scale(1.08); opacity: 1; text-shadow: 0 0 12px rgba(255,255,255,0.5); }
+    }
+  </style>
 </head>
 <body>
-<div class="app-container">
-    <!-- SIDEBAR -->
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <h3><i class="fab fa-whatsapp"></i> GreenChat</h3>
-            <div class="icons">
-                <i class="fas fa-user-circle" id="profileBtn"></i>
-                <i class="fas fa-user-plus" id="newContactBtn"></i>
-                <i class="fas fa-cog" id="settingsBtn"></i>
-            </div>
-        </div>
-        <div class="search-box">
-            <input type="text" id="searchConv" placeholder="Buscar conversa...">
-        </div>
-        <div class="conversations-list" id="conversationsList"></div>
-    </div>
 
-    <!-- CHAT AREA -->
-    <div class="chat-area">
-        <div class="chat-header">
-            <button class="back-btn" id="backSidebarBtn"><i class="fas fa-arrow-left"></i></button>
-            <div class="chat-avatar" id="chatAvatar">👤</div>
-            <div class="chat-contact-info">
-                <div class="chat-contact-name" id="chatContactName">Selecione uma conversa</div>
-                <div class="chat-status" id="chatStatus"><i class="fas fa-circle"></i> Offline</div>
-            </div>
-            <div class="chat-actions">
-                <i class="fas fa-edit" id="editConvNameBtn"></i>
-                <i class="fas fa-trash-alt" id="deleteConvBtn"></i>
-            </div>
-        </div>
-        <div class="messages-container" id="messagesContainer"></div>
-        <div class="input-area" id="inputArea" style="display: none;">
-            <button id="emojiBtn"><i class="far fa-smile-wink"></i></button>
-            <div class="emoji-picker" id="emojiPicker"></div>
-            <textarea id="messageInput" rows="1" placeholder="Digite uma mensagem..."></textarea>
-            <button id="sendTextBtn"><i class="fas fa-paper-plane"></i></button>
-            <button id="attachFileBtn"><i class="fas fa-paperclip"></i></button>
-            <input type="file" id="fileInput" style="display: none;">
-        </div>
+<!-- PRELOADER SPLASH -->
+<div id="preloader" class="preloader">
+  <div class="preloader-content">
+    <div class="preloader-icon"><i class="fas fa-shield-alt"></i></div>
+    <div class="preloader-title">Chat Seguro P2P</div>
+    <div class="progress-container">
+      <div class="progress-bar"></div>
     </div>
+    <div class="preloader-sub"><i class="fas fa-key"></i> Carregando ambiente seguro...</div>
+  </div>
 </div>
 
-<!-- MODAIS -->
-<div id="profileModal" class="modal"><div class="modal-content"><h3><i class="fas fa-id-card"></i> Meu Perfil</h3><div id="qrcode"></div><p><strong>ID:</strong> <span id="profileId"></span> <i id="copyIdBtn" class="fas fa-copy" style="cursor:pointer;"></i></p><label>Nome:</label><input type="text" id="profileNickname"><label>Avatar:</label><div id="avatarListProfile"></div><div class="flex-btns"><button id="saveProfileBtn">Salvar</button><button id="closeProfileModal">Fechar</button></div></div></div>
-<div id="contactModal" class="modal"><div class="modal-content"><h3>Adicionar Contato</h3><input type="text" id="contactName" placeholder="Nome"><input type="text" id="contactPeerId" placeholder="ID do Peer"><label>Avatar:</label><div id="avatarListContact"></div><div class="flex-btns"><button id="saveContactBtn">Salvar</button><button id="scanQrBtn"><i class="fas fa-camera"></i> Escanear QR</button><button id="closeContactModal">Cancelar</button></div></div></div>
-<div id="scannerModal" class="modal"><div class="modal-content"><h3>Escanear QR Code</h3><div id="reader"></div><button id="stopScannerBtn" style="margin-top:16px;">Parar</button></div></div>
-<div id="settingsModal" class="modal"><div class="modal-content"><h3>Configurações</h3><p>Status: <span id="connStatus">🔌 Desconectado</span></p><button id="reconnectPeerBtn">Reconectar</button><button id="closeSettingsModal">Fechar</button></div></div>
-<div id="searchUserModal" class="modal"><div class="modal-content"><h3>Buscar Usuário</h3><input type="text" id="searchUserName" placeholder="Nome..."><button id="doSearchBtn">Buscar</button><div id="searchResults"></div><button id="closeSearchModal">Fechar</button></div></div>
-<div id="loadingToast" class="loading-toast">Processando...</div>
-<div id="contextMenu" class="context-menu"></div>
+<div class="chat-app">
+  <div class="chat-header">
+    <div class="header-left">
+      <span class="chat-title"><i class="fas fa-shield-alt"></i> Chat Seguro P2P</span>
+      <div class="my-id-card"><i class="fas fa-id-card"></i><span id="myPeerId">carregando...</span><button class="copy-id-btn" id="copyIdBtn"><i class="fas fa-copy"></i></button></div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <div id="connectionStatusBadge" class="status-badge status-offline"><i class="fas fa-plug"></i> <span>Offline</span></div>
+    </div>
+  </div>
+  <div class="dual-id-panel">
+    <div class="id-badge"><span class="id-label"><i class="fas fa-lock"></i> Fixo:</span><span class="id-value" id="fixedIdDisplay">----</span><button class="icon-mini" id="copyFixedIdBtn"><i class="fas fa-copy"></i></button><button class="icon-mini" id="resetFixedIdBtn"><i class="fas fa-sync-alt"></i></button></div>
+    <div class="id-badge"><span class="id-label"><i class="fas fa-random"></i> Descartável:</span><span class="id-value" id="disposableHint">sessão</span></div>
+    <div class="tool-group"><button class="btn-small" id="switchToFixedBtn"><i class="fas fa-star-of-life"></i> <span id="fixedBtnText">Fixo</span></button><button class="btn-small" id="switchToDisposableBtn"><i class="fas fa-waveform"></i> <span id="disposableBtnText">Descartável</span></button></div>
+    <div class="mode-badge" id="activeIdModeBadge"><i class="fas fa-id-card"></i> <span id="modeBadgeText">Modo: Descartável</span></div>
+  </div>
+  <div class="connection-panel">
+    <div class="remote-input-group"><i class="fas fa-user-friends"></i><input type="text" id="remotePeerId" placeholder="ID do amigo (Fixo ou Descartável)" autocomplete="off"></div>
+    <div class="action-buttons"><button id="connectBtn" class="btn"><i class="fas fa-link"></i> <span id="connectBtnText">Conectar</span></button><button id="disconnectBtn" class="btn btn-outline"><i class="fas fa-unlink"></i> <span id="disconnectBtnText">Desconectar</span></button></div>
+  </div>
+  <div class="chat-toolbar">
+    <div class="tool-group"><button id="clearChatBtn" class="icon-btn"><i class="fas fa-trash-alt"></i></button><button id="emojiPickerBtn" class="icon-btn"><i class="far fa-smile-wink"></i></button><button id="contactsBtn" class="icon-btn"><i class="fas fa-address-book"></i></button><button id="recallLastPeerBtn" class="icon-btn"><i class="fas fa-history"></i></button></div>
+    <div class="tool-group"><div id="encryptionStatusBadge" class="encrypt-badge plain"><i class="fas fa-unlock-alt"></i> <span id="encryptionBadgeText">Sem criptografia</span></div><button id="setEncryptionBtn" class="icon-btn"><i class="fas fa-key"></i></button></div>
+  </div>
+  <div class="messages-container" id="messagesContainer"><div class="system-message" id="initialSysMsg">🔒 E2EE pronto. Defina uma frase secreta compartilhada com seu amigo para chats criptografados. <i class="fas fa-shield-virus"></i></div></div>
+  <div id="typingIndicatorArea" style="padding: 0 12px;"></div>
+  <div class="chat-footer">
+    <div class="input-wrapper"><i class="far fa-keyboard"></i><input type="text" id="messageInput" placeholder="Digite uma mensagem..." autocomplete="off" disabled></div>
+    <button id="sendBtn" class="btn" disabled><i class="fas fa-paper-plane"></i></button>
+  </div>
+  <button id="scrollToBottomBtn" class="scroll-btn" style="display: none;"><i class="fas fa-chevron-down"></i></button>
+  <div id="emojiPicker" class="emoji-picker-container">
+    <div class="emoji-picker-header"><span><i class="far fa-smile-wink"></i> Escolha um emoji</span><button class="close-emoji-picker" id="closeEmojiPickerBtn">&times;</button></div>
+    <div class="emoji-grid" id="emojiGrid"></div>
+  </div>
+  <div id="contactsModal" class="modal-overlay">
+    <div class="contacts-modal">
+      <div class="modal-header"><span><i class="fas fa-address-book"></i> Contatos</span><button id="closeModalBtn" style="background:none; border:none; color:white; font-size:1.5rem;">&times;</button></div>
+      <div class="modal-body">
+        <div class="contact-form">
+          <input type="text" id="contactNameInput" placeholder="Nome do contato" autocomplete="off">
+          <input type="text" id="contactIdInput" placeholder="ID do amigo (fixo ou descartável)" autocomplete="off">
+          <button id="saveContactBtn">➕ Adicionar / Atualizar</button>
+          <input type="hidden" id="editingContactId" value="">
+        </div>
+        <div id="contactsList" class="contact-list">Carregando...</div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
-    // ---------- CONFIGURAÇÃO GLOBAL ----------
-    const AVATARS = ["😀","😎","🥳","🐱","🐶","🦊","🐼","👾","🤖","👨‍💻","👩‍🎤","💎","🌟","🍕","⚽"];
-    const MAX_IMAGE_SIZE = 640;
-    const MAX_FILE_SIZE_MB = 10;
-    let currentUser = { id: null, nickname: "AmigoVerde", avatar: "😀" };
-    let contacts = [];
-    let conversations = [];
-    let messages = [];
-    let userDirectory = [];
-    let currentConversationId = null;
-    let peer = null;
-    let connections = new Map();
-    let pendingMessages = new Map();
-    let reconnectAttempts = 0;
-    let html5QrCode = null;
-
-    // STORAGE
-    function saveAll() {
-        localStorage.setItem('p2p_user', JSON.stringify(currentUser));
-        localStorage.setItem('p2p_contacts', JSON.stringify(contacts));
-        localStorage.setItem('p2p_conversations', JSON.stringify(conversations));
-        localStorage.setItem('p2p_messages', JSON.stringify(messages));
-        localStorage.setItem('p2p_directory', JSON.stringify(userDirectory));
+  // ======================= APENAS PORTUGUÊS (TRADUÇÕES UNIFICADAS) =======================
+  const translations = {
+    pt: { appTitle: "Chat Seguro P2P", fixedLabel: "Fixo:", disposableLabel: "Descartável:", fixedBtnText: "Fixo", disposableBtnText: "Descartável", modeFixed: "Modo: ID Fixo", modeDisposable: "Modo: Descartável", remotePlaceholder: "ID do amigo (Fixo ou Descartável)", connectBtn: "Conectar", disconnectBtn: "Desconectar", clearChatTitle: "Limpar chat", emojiPickerTitle: "Seletor de emojis", contactsBtnTitle: "Contatos (CRUD)", lastPeerTitle: "Último ID", encryptionNone: "Sem criptografia", encryptionActive: "E2EE Ativo 🔒", keyBtnTitle: "Definir chave", msgPlaceholder: "Digite uma mensagem...", sysInit: "🔒 E2EE pronto. Defina uma frase secreta compartilhada com seu amigo para chats criptografados. 🛡️", sysMobile: "📱 Mobile pronto: Contatos, Emojis, E2EE + ID duplo.", connectedTo: "✅ Conectado a {id}", connectionClosed: "🔌 Conexão encerrada com {id}", disconnectedFrom: "🔓 Desconectado de {id}", timeoutConnect: "⏰ Não foi possível conectar a {id}", failedConnect: "❌ Falha ao conectar a {id}", encryptEnabled: "🔒 Criptografia ativada! Certifique-se de que seu amigo use a MESMA frase secreta.", encryptDisabled: "🔓 Criptografia desativada.", encryptFailed: "Falha ao definir chave de criptografia", copySuccess: "✅ ID copiado", copyManual: "Copiar manualmente", fixedUpdated: "ID fixo atualizado para {id}", confirmResetFixed: "Alterar seu ID fixo permanente? Links antigos deixarão de funcionar.", cannotSelf: "Você não pode se conectar a si mesmo 😅", alreadyConnected: "Já conectado. Desconecte primeiro.", enterPeerId: "Digite o ID do amigo", notConnected: "Não conectado", encryptionPrompt: "🔐 Criptografia de ponta a ponta\nDigite uma frase secreta compartilhada (a mesma que seu amigo):\nDeixe em branco para desativar a criptografia.", chatCleared: "🧹 Histórico do chat limpo.", lastPeerLoaded: "Carregado: {id}", noPrevPeer: "Nenhum ID anterior encontrado", fixedCopied: "ID Fixo copiado", activeCopied: "ID ativo copiado", peerNotReady: "Peer não está pronto", initFailed: "Falha na inicialização", switchModeDisconnect: "Desconecte antes de trocar o modo de ID.", plaintextSendWarn: "⚠️ Enviando sem criptografia (ativar E2EE recomendado)", plaintextReceiveWarn: "⚠️ Mensagem recebida em texto simples enquanto a criptografia está ativa. Defina a mesma frase secreta.", typingFriend: "Amigo está digitando...", emojiPickerHeader: "Escolha um emoji", copyIdTitle: "Copiar meu ID ativo", copyFixedTitle: "Copiar ID fixo", resetFixedTitle: "Gerar novo ID fixo", modalTitle: "Contatos", addUpdateBtn: "➕ Adicionar / Atualizar", noContacts: "✨ Nenhum contato ainda. Adicione um acima.", connectContact: "Conectar", editContact: "Editar", deleteContact: "Excluir", contactSaved: "Contato salvo", contactDeleted: "Contato excluído", contactNamePlaceholder: "Nome do contato", contactIdPlaceholder: "ID do amigo" }
+  };
+  let currentLang = 'pt';
+  function t(key, params = {}) { let str = translations.pt[key] || translations.pt[key] || key; Object.keys(params).forEach(k => str = str.replace(`{${k}}`, params[k])); return str; }
+  
+  // ======================= PRELOADER =======================
+  let preloaderHidden = false;
+  function hidePreloader() {
+    if (preloaderHidden) return;
+    preloaderHidden = true;
+    const preloader = document.getElementById('preloader');
+    if (preloader) {
+      preloader.style.opacity = '0';
+      setTimeout(() => {
+        preloader.style.display = 'none';
+      }, 600);
     }
-
-    function loadAll() {
-        let u = localStorage.getItem('p2p_user');
-        if (u) currentUser = JSON.parse(u);
-        else {
-            currentUser.id = crypto.randomUUID ? crypto.randomUUID() : 'peer-' + Date.now() + '-' + Math.random();
-            currentUser.nickname = "Viajante" + Math.floor(Math.random() * 100);
-            currentUser.avatar = AVATARS[0];
-            saveAll();
-        }
-        contacts = JSON.parse(localStorage.getItem('p2p_contacts') || '[]');
-        conversations = JSON.parse(localStorage.getItem('p2p_conversations') || '[]');
-        messages = JSON.parse(localStorage.getItem('p2p_messages') || '[]');
-        userDirectory = JSON.parse(localStorage.getItem('p2p_directory') || '[]');
-        updateDirectoryWithCurrent();
-    }
-
-    function updateDirectoryWithCurrent() {
-        let idx = userDirectory.findIndex(u => u.id === currentUser.id);
-        let entry = { id: currentUser.id, nickname: currentUser.nickname, avatar: currentUser.avatar };
-        if (idx >= 0) userDirectory[idx] = entry;
-        else userDirectory.push(entry);
-        localStorage.setItem('p2p_directory', JSON.stringify(userDirectory));
-    }
-
-    // Garante que o contato existe (cria se necessário)
-    function ensureContactExists(peerId) {
-        if (contacts.find(c => c.id === peerId)) return;
-        let dirEntry = userDirectory.find(u => u.id === peerId);
-        let defaultName = dirEntry ? dirEntry.nickname : `Usuário_${peerId.slice(0,6)}`;
-        let defaultAvatar = dirEntry ? dirEntry.avatar : "👤";
-        contacts.push({ id: peerId, name: defaultName, avatar: defaultAvatar });
-        saveAll();
-        if (!conversations.find(c => c.contactId === peerId)) {
-            conversations.push({ contactId: peerId, displayName: defaultName, lastMessage: '', lastTimestamp: Date.now(), unreadCount: 0 });
-            saveAll();
-        }
-        renderSidebar();
-    }
-
-    // Cria conversa se não existir
-    function createConversation(contactId, displayName) {
-        if (!conversations.find(c => c.contactId === contactId)) {
-            conversations.push({ contactId, displayName, lastMessage: '', lastTimestamp: Date.now(), unreadCount: 0 });
-            saveAll();
-        }
-        renderSidebar();
-    }
-
-    function renderSidebar() {
-        let term = document.getElementById('searchConv').value.toLowerCase();
-        let filtered = conversations.filter(c => c.displayName.toLowerCase().includes(term));
-        let container = document.getElementById('conversationsList');
-        if (!container) return;
-        container.innerHTML = filtered.map(conv => {
-            let contact = contacts.find(c => c.id === conv.contactId);
-            let avatar = contact ? contact.avatar : "👤";
-            let unread = conv.unreadCount > 0 ? `<span class="unread-badge">${conv.unreadCount}</span>` : '';
-            return `<div class="conv-item" data-cid="${conv.contactId}">
-                        <div class="conv-avatar">${avatar}</div>
-                        <div class="conv-info">
-                            <div class="conv-name">${conv.displayName} <span class="conv-time">${new Date(conv.lastTimestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</span></div>
-                            <div class="conv-last-msg">${conv.lastMessage || 'Nova conversa'}</div>
-                        </div>${unread}
-                    </div>`;
-        }).join('');
-        document.querySelectorAll('.conv-item').forEach(el => el.addEventListener('click', () => openConversation(el.dataset.cid)));
-    }
-
-    function renderMessages(convId) {
-        let msgs = messages.filter(m => m.convId === convId).sort((a,b)=>a.timestamp-b.timestamp);
-        let container = document.getElementById('messagesContainer');
-        if (!container) return;
-        container.innerHTML = msgs.map(msg => {
-            let isSent = msg.direction === 'sent';
-            let content = '';
-            if (msg.type === 'image') content = `<img src="${msg.content}" alt="imagem" onclick="window.open('${msg.content}','_blank')">`;
-            else if (msg.type === 'file') content = `<a href="${msg.content}" download style="color:#075e54;">📎 Baixar arquivo</a>`;
-            else content = `<div class="msg-content">${escapeHtml(msg.content)} ${msg.edited ? '<small>(editado)</small>' : ''}</div>`;
-            return `<div class="message ${isSent ? 'sent' : 'received'}" data-msgid="${msg.id}" data-direction="${msg.direction}" data-type="${msg.type}" data-content="${msg.content.replace(/"/g, '&quot;')}">
-                        ${content}
-                        <div class="msg-meta">${new Date(msg.timestamp).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})} ${isSent ? (msg.status === 'read' ? '<i class="fas fa-check-double"></i>' : '<i class="fas fa-check"></i>') : ''}</div>
-                    </div>`;
-        }).join('');
-        container.scrollTop = container.scrollHeight;
-        attachLongPressMenu();
-
-        // Marcar como lidas
-        if (convId) {
-            let unread = messages.filter(m => m.convId === convId && m.direction === 'received' && m.status !== 'read');
-            unread.forEach(m => { m.status = 'read'; sendViaPeer(convId, { type: 'readReceipt', targetMsgId: m.id }); });
-            let conv = conversations.find(c => c.contactId === convId);
-            if (conv) conv.unreadCount = 0;
-            saveAll();
-            renderSidebar();
-        }
-    }
-
-    function escapeHtml(str) { return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
-
-    // Long press para menu de contexto (mobile)
-    function attachLongPressMenu() {
-        let timer;
-        const msgs = document.querySelectorAll('.message');
-        msgs.forEach(msg => {
-            msg.addEventListener('touchstart', (e) => {
-                timer = setTimeout(() => {
-                    const msgId = msg.dataset.msgid;
-                    const direction = msg.dataset.direction;
-                    if (direction === 'sent') {
-                        showContextMenu(e, msgId);
-                    }
-                }, 500);
-            });
-            msg.addEventListener('touchend', () => clearTimeout(timer));
-            msg.addEventListener('touchmove', () => clearTimeout(timer));
-        });
-    }
-
-    function showContextMenu(event, msgId) {
-        event.preventDefault();
-        const menu = document.getElementById('contextMenu');
-        menu.innerHTML = `
-            <button id="editMsgBtn"><i class="fas fa-edit"></i> Editar</button>
-            <button id="deleteMsgBtn"><i class="fas fa-trash-alt"></i> Excluir</button>
-        `;
-        menu.style.display = 'block';
-        menu.style.left = `${event.touches[0].clientX - 80}px`;
-        menu.style.top = `${event.touches[0].clientY - 40}px`;
-        document.getElementById('editMsgBtn').onclick = () => { editMessage(msgId); menu.style.display = 'none'; };
-        document.getElementById('deleteMsgBtn').onclick = () => { deleteMessage(msgId); menu.style.display = 'none'; };
-        setTimeout(() => { document.addEventListener('click', () => menu.style.display = 'none', { once: true }); }, 100);
-    }
-
-    function editMessage(msgId) {
-        let msg = messages.find(m => m.id === msgId);
-        if (msg && msg.direction === 'sent') {
-            let newContent = prompt("Editar mensagem:", msg.content);
-            if (newContent && newContent.trim()) {
-                msg.content = newContent.trim();
-                msg.edited = true;
-                saveAll();
-                renderMessages(currentConversationId);
-                sendViaPeer(currentConversationId, { type: 'editMsg', msgId: msg.id, newContent: msg.content });
-            }
-        }
-    }
-
-    function deleteMessage(msgId) {
-        if (confirm("Excluir esta mensagem?")) {
-            let idx = messages.findIndex(m => m.id === msgId);
-            if (idx !== -1) {
-                messages.splice(idx, 1);
-                saveAll();
-                renderMessages(currentConversationId);
-                sendViaPeer(currentConversationId, { type: 'deleteMsg', msgId: msgId });
-            }
-        }
-    }
-
-    // Redimensionamento de imagem
-    function resizeImage(dataUrl, maxSize = MAX_IMAGE_SIZE) {
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.onload = () => {
-                let width = img.width, height = img.height;
-                if (width > height) { width = maxSize; height = (img.height * maxSize) / img.width; }
-                else { height = maxSize; width = (img.width * maxSize) / img.height; }
-                const canvas = document.createElement('canvas');
-                canvas.width = width; canvas.height = height;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, width, height);
-                resolve(canvas.toDataURL('image/jpeg', 0.7));
-            };
-            img.onerror = reject;
-            img.src = dataUrl;
-        });
-    }
-
-    function showToast(msg) {
-        const toast = document.getElementById('loadingToast');
-        toast.textContent = msg;
-        toast.style.display = 'block';
-        setTimeout(() => toast.style.display = 'none', 2000);
-    }
-
-    async function attachFileHandler(file) {
-        if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) return alert(`Limite ${MAX_FILE_SIZE_MB}MB`);
-        if (file.type.startsWith('image/')) {
-            showToast('Redimensionando...');
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                const resized = await resizeImage(e.target.result);
-                sendMessage(resized, 'image');
-                showToast('Imagem enviada');
-            };
-            reader.readAsDataURL(file);
-        } else {
-            const reader = new FileReader();
-            reader.onload = (e) => sendMessage(e.target.result, 'file');
-            reader.readAsDataURL(file);
-        }
-    }
-
-    // PEERJS
-    function initPeer() {
-        if (peer) peer.destroy();
-        peer = new Peer(currentUser.id, { debug: 1, config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] } });
-        peer.on('open', () => document.getElementById('connStatus').innerHTML = '✅ Conectado');
-        peer.on('connection', (conn) => {
-            connections.set(conn.peer, conn);
-            conn.on('data', (data) => handleIncomingData(conn.peer, data));
-            conn.on('close', () => connections.delete(conn.peer));
-            flushPending(conn.peer);
-        });
-        peer.on('error', () => setTimeout(() => initPeer(), 3000 * Math.min(++reconnectAttempts, 5)));
-    }
-
-    function ensureConnection(peerId) {
-        if (!peer) return;
-        if (connections.has(peerId) && connections.get(peerId).open) { updateStatusOnline(true); return; }
-        let conn = peer.connect(peerId, { reliable: true });
-        conn.on('open', () => { connections.set(peerId, conn); flushPending(peerId); updateStatusOnline(true); });
-        conn.on('data', (data) => handleIncomingData(peerId, data));
-        conn.on('close', () => { connections.delete(peerId); updateStatusOnline(false); setTimeout(() => ensureConnection(peerId), 3000); });
-    }
-
-    function flushPending(peerId) {
-        if (pendingMessages.has(peerId)) {
-            pendingMessages.get(peerId).forEach(msg => sendViaPeer(peerId, msg));
-            pendingMessages.delete(peerId);
-        }
-    }
-
-    function sendViaPeer(peerId, obj) {
-        let conn = connections.get(peerId);
-        if (conn && conn.open) { conn.send(obj); return true; }
-        else {
-            if (!pendingMessages.has(peerId)) pendingMessages.set(peerId, []);
-            pendingMessages.get(peerId).push(obj);
-            ensureConnection(peerId);
-            return false;
-        }
-    }
-
-    function handleIncomingData(peerId, data) {
-        if (data.type === 'textMsg' || data.type === 'imageMsg' || data.type === 'fileMsg') {
-            ensureContactExists(peerId);
-            let newMsg = { id: crypto.randomUUID(), convId: peerId, type: data.type === 'textMsg' ? 'text' : (data.type === 'imageMsg' ? 'image' : 'file'), content: data.content, timestamp: Date.now(), direction: 'received', status: 'sent', edited: false };
-            messages.push(newMsg);
-            saveAll();
-            let conv = conversations.find(c => c.contactId === peerId);
-            if (conv) {
-                conv.lastMessage = newMsg.type === 'text' ? newMsg.content.substring(0,35) : (newMsg.type === 'image' ? '📷 Imagem' : '📎 Arquivo');
-                conv.lastTimestamp = newMsg.timestamp;
-                if (currentConversationId !== peerId) conv.unreadCount = (conv.unreadCount || 0) + 1;
-                saveAll();
-                renderSidebar();
-            }
-            if (currentConversationId === peerId) renderMessages(peerId);
-            sendViaPeer(peerId, { type: 'readReceipt', targetMsgId: newMsg.id });
-        } else if (data.type === 'readReceipt') {
-            let target = messages.find(m => m.id === data.targetMsgId);
-            if (target && target.direction === 'sent') target.status = 'read';
-            saveAll();
-            if (currentConversationId === peerId) renderMessages(currentConversationId);
-        } else if (data.type === 'editMsg') {
-            let msg = messages.find(m => m.id === data.msgId);
-            if (msg && msg.direction === 'sent') { msg.content = data.newContent; msg.edited = true; saveAll(); if (currentConversationId === peerId) renderMessages(currentConversationId); }
-        } else if (data.type === 'deleteMsg') {
-            let idx = messages.findIndex(m => m.id === data.msgId);
-            if (idx !== -1) { messages.splice(idx, 1); saveAll(); if (currentConversationId === peerId) renderMessages(currentConversationId); }
-        }
-    }
-
-    function updateStatusOnline(isOnline) {
-        document.getElementById('chatStatus').innerHTML = isOnline ? '<i class="fas fa-circle" style="color:#25d366"></i> Online' : '<i class="fas fa-circle" style="color:#aaa"></i> Offline';
-    }
-
-    function sendMessage(content, type = 'text') {
-        if (!currentConversationId) return;
-        let msgId = crypto.randomUUID();
-        let msgObj = { id: msgId, convId: currentConversationId, type, content, timestamp: Date.now(), direction: 'sent', status: 'sent', edited: false };
-        messages.push(msgObj);
-        saveAll();
-        renderMessages(currentConversationId);
-        sendViaPeer(currentConversationId, { type: type + 'Msg', content: content, msgId: msgId });
-        let conv = conversations.find(c => c.contactId === currentConversationId);
-        if (conv) { conv.lastMessage = type === 'text' ? content.substring(0,35) : (type === 'image' ? '📷 Imagem' : '📎 Arquivo'); conv.lastTimestamp = Date.now(); saveAll(); renderSidebar(); }
-    }
-
-    // FUNÇÃO PRINCIPAL DE ABRIR CONVERSA - GARANTE QUE O INPUT APAREÇA
-    function openConversation(contactId) {
-        if (!contactId) return;
-        currentConversationId = contactId;
-        
-        // GARANTIR que o contato existe na lista de contatos
-        ensureContactExists(contactId);
-        
-        let contact = contacts.find(c => c.id === contactId);
-        let conv = conversations.find(c => c.contactId === contactId);
-        
-        // Atualizar interface do chat
-        document.getElementById('chatContactName').innerText = conv ? conv.displayName : (contact ? contact.name : 'Conversa');
-        document.getElementById('chatAvatar').innerHTML = contact ? contact.avatar : "👤";
-        
-        // FORÇAR exibição do campo de input
-        let inputArea = document.getElementById('inputArea');
-        inputArea.style.display = 'flex';
-        
-        // Renderizar mensagens e conectar
-        renderMessages(contactId);
-        ensureConnection(contactId);
-        
-        // Fechar sidebar em mobile
-        if (window.innerWidth <= 700) {
-            document.getElementById('sidebar').classList.remove('open');
-        }
-        
-        renderSidebar();
-    }
-
-    // QR Scanner
-    function startQrScanner(onSuccess) {
-        const modal = document.getElementById('scannerModal');
-        modal.style.display = 'flex';
-        const readerDiv = document.getElementById('reader');
-        readerDiv.innerHTML = '';
-        html5QrCode = new Html5Qrcode("reader");
-        html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (decoded) => {
-            html5QrCode.stop();
-            modal.style.display = 'none';
-            onSuccess(decoded);
-        }, () => {});
-    }
-
-    // INICIALIZAÇÃO
-    window.onload = () => {
-        loadAll();
-        initPeer();
-        renderSidebar();
-
-        // Perfil
-        document.getElementById('profileBtn').onclick = () => {
-            document.getElementById('profileId').innerText = currentUser.id;
-            document.getElementById('profileNickname').value = currentUser.nickname;
-            let avatarDiv = document.getElementById('avatarListProfile');
-            avatarDiv.innerHTML = AVATARS.map(a => `<span class="avatar-option ${currentUser.avatar===a?'selected':''}" data-avatar="${a}">${a}</span>`).join('');
-            document.querySelectorAll('#avatarListProfile .avatar-option').forEach(el => el.onclick = () => {
-                document.querySelectorAll('#avatarListProfile .avatar-option').forEach(c=>c.classList.remove('selected'));
-                el.classList.add('selected');
-                currentUser.avatar = el.dataset.avatar;
-            });
-            document.getElementById('qrcode').innerHTML = '';
-            new QRCode(document.getElementById('qrcode'), { text: currentUser.id, width: 128, height: 128 });
-            document.getElementById('profileModal').style.display = 'flex';
-        };
-        document.getElementById('saveProfileBtn').onclick = () => {
-            currentUser.nickname = document.getElementById('profileNickname').value.trim() || "AmigoVerde";
-            updateDirectoryWithCurrent();
-            saveAll();
-            renderSidebar();
-            document.getElementById('profileModal').style.display = 'none';
-        };
-        document.getElementById('closeProfileModal').onclick = () => document.getElementById('profileModal').style.display = 'none';
-        document.getElementById('copyIdBtn').onclick = () => { navigator.clipboard.writeText(currentUser.id); alert('ID copiado!'); };
-
-        // Contatos
-        document.getElementById('newContactBtn').onclick = () => {
-            document.getElementById('contactName').value = '';
-            document.getElementById('contactPeerId').value = '';
-            let avatarDiv = document.getElementById('avatarListContact');
-            avatarDiv.innerHTML = AVATARS.map(a => `<span class="avatar-option" data-avatar="${a}">${a}</span>`).join('');
-            document.querySelectorAll('#avatarListContact .avatar-option').forEach(el => el.onclick = () => {
-                document.querySelectorAll('#avatarListContact .avatar-option').forEach(c=>c.classList.remove('selected'));
-                el.classList.add('selected');
-            });
-            if(document.querySelector('#avatarListContact .avatar-option')) document.querySelector('#avatarListContact .avatar-option').classList.add('selected');
-            document.getElementById('contactModal').style.display = 'flex';
-        };
-        document.getElementById('scanQrBtn').onclick = () => startQrScanner((id) => { document.getElementById('contactPeerId').value = id; alert('ID detectado! Preencha o nome.'); });
-        document.getElementById('stopScannerBtn').onclick = () => { if(html5QrCode) html5QrCode.stop(); document.getElementById('scannerModal').style.display = 'none'; };
-        document.getElementById('saveContactBtn').onclick = () => {
-            let name = document.getElementById('contactName').value.trim();
-            let pid = document.getElementById('contactPeerId').value.trim();
-            let selected = document.querySelector('#avatarListContact .avatar-option.selected')?.dataset.avatar || "😀";
-            if(!name || !pid) return alert('Preencha nome e ID');
-            if(!contacts.find(c=>c.id===pid)){
-                contacts.push({ id: pid, name, avatar: selected });
-                createConversation(pid, name);
-                saveAll();
-                renderSidebar();
-                alert('Contato adicionado!');
-                document.getElementById('contactModal').style.display = 'none';
-            } else alert('Contato já existe');
-        };
-        document.getElementById('closeContactModal').onclick = () => document.getElementById('contactModal').style.display = 'none';
-        document.getElementById('settingsBtn').onclick = () => document.getElementById('settingsModal').style.display = 'flex';
-        document.getElementById('reconnectPeerBtn').onclick = () => { initPeer(); document.getElementById('settingsModal').style.display = 'none'; };
-        document.getElementById('closeSettingsModal').onclick = () => document.getElementById('settingsModal').style.display = 'none';
-
-        // Busca de usuários
-        document.getElementById('doSearchBtn').onclick = () => {
-            let term = document.getElementById('searchUserName').value.toLowerCase();
-            let results = userDirectory.filter(u => u.id !== currentUser.id && u.nickname.toLowerCase().includes(term));
-            document.getElementById('searchResults').innerHTML = results.map(u => `<div style="padding:12px;border-bottom:1px solid #eee;cursor:pointer;" data-id="${u.id}" data-name="${u.nickname}" data-avatar="${u.avatar}">${u.nickname} <small>(${u.id.slice(0,8)}...)</small></div>`).join('') || 'Nenhum';
-            document.querySelectorAll('#searchResults div[data-id]').forEach(div => div.onclick = () => {
-                let pid = div.dataset.id, name = div.dataset.name;
-                document.getElementById('contactName').value = name;
-                document.getElementById('contactPeerId').value = pid;
-                document.getElementById('searchUserModal').style.display = 'none';
-                document.getElementById('contactModal').style.display = 'flex';
-            });
-        };
-        document.getElementById('closeSearchModal').onclick = () => document.getElementById('searchUserModal').style.display = 'none';
-
-        // Envio mensagens
-        document.getElementById('sendTextBtn').onclick = () => {
-            let txt = document.getElementById('messageInput').value.trim();
-            if(txt) { sendMessage(txt, 'text'); document.getElementById('messageInput').value = ''; }
-        };
-        document.getElementById('attachFileBtn').onclick = () => document.getElementById('fileInput').click();
-        document.getElementById('fileInput').onchange = (e) => { if(e.target.files.length) attachFileHandler(e.target.files[0]); e.target.value = ''; };
-        document.getElementById('backSidebarBtn').onclick = () => document.getElementById('sidebar').classList.add('open');
-        document.getElementById('editConvNameBtn').onclick = () => {
-            let conv = conversations.find(c=>c.contactId===currentConversationId);
-            if(conv) { let newName = prompt('Novo nome:', conv.displayName); if(newName) { conv.displayName = newName; saveAll(); renderSidebar(); document.getElementById('chatContactName').innerText = newName; } }
-        };
-        document.getElementById('deleteConvBtn').onclick = () => {
-            if(confirm('Excluir conversa?')){
-                let cid = currentConversationId;
-                messages = messages.filter(m=>m.convId!==cid);
-                conversations = conversations.filter(c=>c.contactId!==cid);
-                saveAll();
-                currentConversationId = null;
-                document.getElementById('inputArea').style.display = 'none';
-                renderSidebar();
-                document.getElementById('messagesContainer').innerHTML = '';
-            }
-        };
-        document.getElementById('searchConv').addEventListener('input', () => renderSidebar());
-
-        // Emoji picker
-        const emojiList = "😀😃😄😁😆😅😂🤣😊😇🙂🙃😉😌😍🥰😘😗😙😚😋😜😝😛🤑🤗🤭🤫🤔🤐🤨😐😑😶😏😒🙄😬🤥😌😔😪🤤😴😷🤒🤕🤢🤮🤧🥵🥶😎🤓🧐😕😟🙁☹️😮😯😲😳🥺😦😧😨😰😥😢😭😱😖😣😞😓😩😫🥱😤😡😠🤬😈👿💀☠️💩🤡👹👺👻👽🤖👍👎👊✊🤛🤜🤞✌️🤟🤘👌🤏👈👉👆👇☝️✋🤚🖐️🖖👋🤙💪🦵🦶👂👃🧠🦷🦴👀👁️👅👄";
-        document.getElementById('emojiPicker').innerHTML = emojiList.split('').map(e => `<span>${e}</span>`).join('');
-        let emojiPicker = document.getElementById('emojiPicker');
-        let emojiBtn = document.getElementById('emojiBtn');
-        emojiBtn.onclick = (e) => { e.stopPropagation(); emojiPicker.style.display = emojiPicker.style.display === 'grid' ? 'none' : 'grid'; };
-        document.addEventListener('click', () => emojiPicker.style.display = 'none');
-        emojiPicker.querySelectorAll('span').forEach(sp => sp.onclick = () => { document.getElementById('messageInput').value += sp.innerText; emojiPicker.style.display = 'none'; });
-        document.getElementById('messageInput').addEventListener('keypress', (e) => { if(e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); document.getElementById('sendTextBtn').click(); } });
-
-        // Fechar sidebar ao clicar fora (mobile)
-        document.addEventListener('click', (e) => {
-            if(window.innerWidth <= 700 && document.getElementById('sidebar').classList.contains('open') && !e.target.closest('.sidebar') && !e.target.closest('.back-btn')){
-                document.getElementById('sidebar').classList.remove('open');
-            }
-        });
-    };
+  }
+  // Fallback: esconde preloader após 5s mesmo se algo falhar
+  setTimeout(() => { if (!preloaderHidden) hidePreloader(); }, 5000);
+  
+  // ======================= CONTATOS (CRUD) =======================
+  let contacts = [];
+  const CONTACTS_STORAGE = "p2p_contacts";
+  function loadContacts() { const stored = localStorage.getItem(CONTACTS_STORAGE); contacts = stored ? JSON.parse(stored) : []; }
+  function saveContacts() { localStorage.setItem(CONTACTS_STORAGE, JSON.stringify(contacts)); }
+  function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
+  function renderContactsList() {
+    const container = document.getElementById('contactsList');
+    if (!container) return;
+    if (contacts.length === 0) { container.innerHTML = `<div class="system-message">✨ ${t('noContacts')}</div>`; return; }
+    container.innerHTML = '';
+    contacts.forEach(contact => {
+      const div = document.createElement('div'); div.className = 'contact-item';
+      div.innerHTML = `<div class="contact-info"><div class="contact-name">${escapeHtml(contact.name)}</div><div class="contact-id">${escapeHtml(contact.peerId)}</div></div><div class="contact-actions"><button class="connect-contact" data-id="${contact.id}" data-peerid="${escapeHtml(contact.peerId)}" title="${t('connectContact')}"><i class="fas fa-plug"></i></button><button class="edit-contact" data-id="${contact.id}" title="${t('editContact')}"><i class="fas fa-edit"></i></button><button class="delete-contact" data-id="${contact.id}" title="${t('deleteContact')}"><i class="fas fa-trash"></i></button></div>`;
+      container.appendChild(div);
+    });
+    document.querySelectorAll('.connect-contact').forEach(btn => btn.addEventListener('click', (e) => { e.stopPropagation(); const peerId = btn.getAttribute('data-peerid'); if (peerId) { document.getElementById('remotePeerId').value = peerId; closeContactsModal(); showToast(`🔗 ${t('connectContact')}: ${peerId}`); connectToPeer(peerId); } }));
+    document.querySelectorAll('.edit-contact').forEach(btn => btn.addEventListener('click', (e) => { const id = btn.getAttribute('data-id'); const contact = contacts.find(c => c.id == id); if (contact) { document.getElementById('contactNameInput').value = contact.name; document.getElementById('contactIdInput').value = contact.peerId; document.getElementById('editingContactId').value = contact.id; document.getElementById('saveContactBtn').innerHTML = t('addUpdateBtn'); } }));
+    document.querySelectorAll('.delete-contact').forEach(btn => btn.addEventListener('click', (e) => { const id = btn.getAttribute('data-id'); if (confirm(`Excluir ${t('deleteContact')}?`)) { contacts = contacts.filter(c => c.id != id); saveContacts(); renderContactsList(); showToast(t('contactDeleted')); } }));
+  }
+  function openContactsModal() { document.getElementById('contactsModal').style.display = 'flex'; renderContactsList(); }
+  function closeContactsModal() { document.getElementById('contactsModal').style.display = 'none'; document.getElementById('contactNameInput').value = ''; document.getElementById('contactIdInput').value = ''; document.getElementById('editingContactId').value = ''; document.getElementById('saveContactBtn').innerHTML = t('addUpdateBtn'); }
+  function handleSaveContact() { 
+    const name = document.getElementById('contactNameInput').value.trim(); 
+    const peerId = document.getElementById('contactIdInput').value.trim(); 
+    if (!name || !peerId) { showToast("Nome e ID são obrigatórios"); return; } 
+    const editId = document.getElementById('editingContactId').value; 
+    if (editId) { 
+      const index = contacts.findIndex(c => c.id == editId); 
+      if (index !== -1) { contacts[index].name = name; contacts[index].peerId = peerId; } 
+    } else { 
+      contacts.push({ id: Date.now().toString(), name: name, peerId: peerId }); 
+    } 
+    saveContacts(); 
+    renderContactsList(); 
+    document.getElementById('contactNameInput').value = ''; 
+    document.getElementById('contactIdInput').value = ''; 
+    document.getElementById('editingContactId').value = ''; 
+    document.getElementById('saveContactBtn').innerHTML = t('addUpdateBtn');
+    showToast(t('contactSaved')); 
+  }
+  
+  // ======================= CRIPTOGRAFIA & PEER =======================
+  let encryptionKey = null, encryptionPassphrase = null; const ENC_SALT = "P2PSecureStaticSalt2025!";
+  async function deriveKeyFromPassphrase(passphrase) { const encoder = new TextEncoder(); const keyMaterial = await crypto.subtle.importKey("raw", encoder.encode(passphrase), "PBKDF2", false, ["deriveKey"]); const salt = encoder.encode(ENC_SALT); return await crypto.subtle.deriveKey({ name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" }, keyMaterial, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]); }
+  async function encryptMessage(plainText) { if (!encryptionKey) return null; const iv = crypto.getRandomValues(new Uint8Array(12)); const encoder = new TextEncoder(); const encoded = encoder.encode(plainText); const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv: iv }, encryptionKey, encoded); const combined = new Uint8Array(iv.length + encrypted.byteLength); combined.set(iv); combined.set(new Uint8Array(encrypted), iv.length); return btoa(String.fromCharCode.apply(null, combined)); }
+  async function decryptMessage(encryptedBase64) { if (!encryptionKey) return null; try { const binary = atob(encryptedBase64); const combined = new Uint8Array(binary.length); for (let i = 0; i < binary.length; i++) combined[i] = binary.charCodeAt(i); const iv = combined.slice(0, 12); const ciphertext = combined.slice(12); const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv: iv }, encryptionKey, ciphertext); return new TextDecoder().decode(decrypted); } catch(e) { return null; } }
+  async function setEncryption(passphrase) { if (!passphrase || passphrase.trim() === "") { encryptionKey = null; encryptionPassphrase = null; updateEncryptionUI(); return false; } try { encryptionKey = await deriveKeyFromPassphrase(passphrase); encryptionPassphrase = passphrase; updateEncryptionUI(); return true; } catch(e) { showToast(t('encryptFailed')); return false; } }
+  function disableEncryption() { encryptionKey = null; encryptionPassphrase = null; updateEncryptionUI(); showToast(t('encryptDisabled')); addSystemMessage(t('encryptDisabled')); }
+  function updateEncryptionUI() { const badge = document.getElementById('encryptionStatusBadge'); const span = badge.querySelector('span'); if (encryptionKey) { badge.className = "encrypt-badge"; span.innerText = t('encryptionActive'); badge.style.background = "#1e5a1e"; } else { badge.className = "encrypt-badge plain"; span.innerText = t('encryptionNone'); badge.style.background = "#a16207"; } }
+  
+  // Emoji picker
+  const emojiList = ["😀","😃","😄","😁","😆","😅","😂","🤣","😊","😇","🙂","🙃","😉","😌","😍","🥰","😘","😗","😙","😚","😋","😛","😝","😜","🤪","🤨","🧐","🤓","😎","🥸","🤩","🥳","😏","😒","😞","😔","😟","😕","🙁","☹️","😣","😖","😫","😩","🥺","😢","😭","😤","😠","😡","🤬","🤯","😳","🥵","🥶","😱","😨","😰","😥","😓","🤗","🤔","🤭","🤫","🤥","😶","😐","😑","😬","🙄","😯","😦","😧","😮","😲","🥱","😴","🤤","😪","😵","🤐","🥴","🤢","🤮","🤧","😷","🤒","🤕","🤑","🤠","😈","👿","👹","👺","💀","👻","👽","🤖","💩","😺","😸","😹","😻","😼","😽","🙀","😿","😾","🙈","🙉","🙊","💋","💌","💘","💝","💖","💗","💓","💞","💕","💟","❤️","🧡","💛","💚","💙","💜","🤎","🖤","🤍","💯","❤️‍🔥","💔","❣️","💭","👋","🤚","✋","🖖","👌","🤌","🤏","✌️","🤞","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","👍","👎","✊","👊","🤛","🤜","👏","🙌","👐","🤲","🤝","🙏","✍️","💅","🤳","💪","🦾","🦿","🦵","🦶","👂","🦻","👃","🧠","🦷","🦴","👀","👁️","👅","👄","💋","🫀","🫁","🗣️","👤","👥","🫂","👶","🧒","👦","👧","🧑","👩","🧔","👨","🧓","👴","👵"]; const usedEmojis = emojiList.slice(0, 75);
+  function buildEmojiPicker() { const grid = document.getElementById('emojiGrid'); if (!grid) return; grid.innerHTML = ''; usedEmojis.forEach(emoji => { const btn = document.createElement('div'); btn.className = 'emoji-item'; btn.textContent = emoji; btn.addEventListener('click', (e) => { e.stopPropagation(); insertEmojiAtCursor(emoji); closeEmojiPicker(); }); grid.appendChild(btn); }); }
+  function insertEmojiAtCursor(emoji) { const input = document.getElementById('messageInput'); if (!input) return; const start = input.selectionStart, end = input.selectionEnd, text = input.value, newText = text.substring(0, start) + emoji + text.substring(end); input.value = newText; input.focus(); input.setSelectionRange(start + emoji.length, start + emoji.length); input.dispatchEvent(new Event('input', { bubbles: true })); }
+  function toggleEmojiPicker() { const picker = document.getElementById('emojiPicker'); if (picker.style.display === 'flex') picker.style.display = 'none'; else picker.style.display = 'flex'; }
+  function closeEmojiPicker() { document.getElementById('emojiPicker').style.display = 'none'; }
+  function handleClickOutsideEmoji(e) { const picker = document.getElementById('emojiPicker'); const btn = document.getElementById('emojiPickerBtn'); if (picker.style.display === 'flex' && !picker.contains(e.target) && e.target !== btn && !btn.contains(e.target)) closeEmojiPicker(); }
+  
+  // PeerJS connection
+  let peer = null, myId = null, dataConnection = null, connectedRemoteId = null, isConnected = false, connectingInProgress = false, currentFixedId = "", currentActiveMode = "disposable";
+  const STORAGE_FIXED_ID = "p2p_fixed_permanent_id", STORAGE_LAST_REMOTE = "p2p_last_remote_id";
+  function showToast(msg) { let t = document.querySelector('.toast-message'); if (t) t.remove(); let d = document.createElement('div'); d.className = 'toast-message'; d.innerText = msg; document.body.appendChild(d); setTimeout(() => d.remove(), 2500); }
+  function addSystemMessage(text) { const div = document.createElement('div'); div.className = 'system-message'; div.innerText = text; document.getElementById('messagesContainer').appendChild(div); scrollToBottom(); }
+  function addChatMessage(text, isLocal, timestamp = null) { const wrapper = document.createElement('div'); wrapper.className = `message-bubble ${isLocal ? 'message-right' : 'message-left'}`; const bubble = document.createElement('div'); bubble.className = 'bubble'; bubble.innerText = text; const timeSpan = document.createElement('div'); timeSpan.className = 'timestamp'; timeSpan.innerText = timestamp || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); wrapper.appendChild(bubble); wrapper.appendChild(timeSpan); document.getElementById('messagesContainer').appendChild(wrapper); scrollToBottom(); }
+  function scrollToBottom() { const container = document.getElementById('messagesContainer'); container.scrollTop = container.scrollHeight; document.getElementById('scrollToBottomBtn').style.display = 'none'; }
+  function handleScrollVisibility() { const container = document.getElementById('messagesContainer'); const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100; document.getElementById('scrollToBottomBtn').style.display = isNearBottom ? 'none' : 'flex'; }
+  function clearChatHistory() { const container = document.getElementById('messagesContainer'); while (container.firstChild) container.removeChild(container.firstChild); addSystemMessage(t('chatCleared')); }
+  function saveLastRemoteId(remoteId) { if (remoteId) localStorage.setItem(STORAGE_LAST_REMOTE, remoteId); }
+  function loadLastRemoteId() { const saved = localStorage.getItem(STORAGE_LAST_REMOTE); if (saved) document.getElementById('remotePeerId').value = saved; }
+  function updateConnectionStatusUI(statusText, isConnectedFlag, remoteId = '') { const badgeSpan = document.querySelector('#connectionStatusBadge span'); const icon = document.querySelector('#connectionStatusBadge i'); if (isConnectedFlag) { badgeSpan.innerText = `Conectado a ${remoteId.slice(0,8)}`; icon.className = 'fas fa-check-circle'; document.querySelector('#connectionStatusBadge').style.background = '#25d366'; } else { if (statusText === 'Connecting...') { badgeSpan.innerText = 'Conectando...'; icon.className = 'fas fa-spinner fa-pulse'; document.querySelector('#connectionStatusBadge').style.background = '#ffc107'; } else { badgeSpan.innerText = t('notConnected'); icon.className = 'fas fa-plug'; document.querySelector('#connectionStatusBadge').style.background = '#cfcfcf'; } } const canSend = isConnectedFlag && dataConnection && dataConnection.open; document.getElementById('messageInput').disabled = !canSend; document.getElementById('sendBtn').disabled = !canSend; }
+  let remoteTypingTimeout = null, localTypingTimer = null, isRemoteTyping = false;
+  function hideRemoteTyping() { if (remoteTypingTimeout) clearTimeout(remoteTypingTimeout); document.getElementById('typingIndicatorArea').innerHTML = ''; isRemoteTyping = false; }
+  function showRemoteTyping() { if (isRemoteTyping) return; isRemoteTyping = true; document.getElementById('typingIndicatorArea').innerHTML = `<div class="typing-indicator"><i class="fas fa-pen-fancy"></i> ${t('typingFriend')}</div>`; scrollToBottom(); if (remoteTypingTimeout) clearTimeout(remoteTypingTimeout); remoteTypingTimeout = setTimeout(() => hideRemoteTyping(), 3000); }
+  function sendTypingStatus(isTyping) { if (!isConnected || !dataConnection?.open) return; dataConnection.send({ type: 'typing', typing: isTyping }); }
+  function resetConnectionState() { if (dataConnection) { try { dataConnection.close(); } catch(e) {} dataConnection = null; } isConnected = false; connectedRemoteId = null; connectingInProgress = false; updateConnectionStatusUI('Disconnected', false); hideRemoteTyping(); }
+  function setupDataConnectionEvents(conn, remotePeerId) { conn.on('open', () => { isConnected = true; connectedRemoteId = remotePeerId; updateConnectionStatusUI('Connected', true, remotePeerId); addSystemMessage(t('connectedTo', { id: remotePeerId })); hideRemoteTyping(); document.getElementById('messageInput').disabled = false; document.getElementById('messageInput').focus(); saveLastRemoteId(remotePeerId); }); conn.on('data', async (data) => { try { if (data.type === 'chat') { let finalText = data.text; if (data.encrypted && encryptionKey) { const decrypted = await decryptMessage(data.text); if (decrypted !== null) finalText = decrypted; else finalText = "🔒 [Falha descriptografia]"; } else if (data.encrypted && !encryptionKey) finalText = "🔒 [Criptografado]"; else if (!data.encrypted && encryptionKey) addSystemMessage(t('plaintextReceiveWarn')); addChatMessage(finalText, false, data.timestamp); } else if (data.type === 'typing') data.typing ? showRemoteTyping() : hideRemoteTyping(); } catch(e) { console.warn(e); } }); conn.on('close', () => { if (isConnected) addSystemMessage(t('connectionClosed', { id: remotePeerId })); resetConnectionState(); }); conn.on('error', (err) => { showToast(`Erro na conexão: ${err.message}`); if (connectingInProgress) { connectingInProgress = false; updateConnectionStatusUI('Disconnected', false); addSystemMessage(t('failedConnect', { id: remotePeerId })); } else resetConnectionState(); }); }
+  async function sendMessage() { let text = document.getElementById('messageInput').value.trim(); if (!text) return; if (!isConnected || !dataConnection?.open) { showToast(t('notConnected')); return; } const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); let payload = { type: 'chat', timestamp }; if (encryptionKey) { const encrypted = await encryptMessage(text); if (encrypted) { payload.text = encrypted; payload.encrypted = true; } else { payload.text = text; payload.encrypted = false; } } else { payload.text = text; payload.encrypted = false; if (!encryptionKey) addSystemMessage(t('plaintextSendWarn')); } dataConnection.send(payload); addChatMessage(text, true, timestamp); document.getElementById('messageInput').value = ''; document.getElementById('messageInput').focus(); sendTypingStatus(false); }
+  function connectToPeer(remoteId) { if (!peer) { showToast(t('peerNotReady')); return; } if (!remoteId) { showToast(t('enterPeerId')); return; } if (remoteId === myId) { showToast(t('cannotSelf')); return; } if (isConnected) { showToast(t('alreadyConnected')); return; } connectingInProgress = true; updateConnectionStatusUI('Connecting...', false); const conn = peer.connect(remoteId, { reliable: true }); if (!conn) { showToast(t('initFailed')); connectingInProgress = false; updateConnectionStatusUI('Disconnected', false); return; } dataConnection = conn; setupDataConnectionEvents(conn, remoteId); setTimeout(() => { if (connectingInProgress && !isConnected) { connectingInProgress = false; if (!isConnected) { showToast(t('timeoutConnect', { id: remoteId })); resetConnectionState(); addSystemMessage(t('timeoutConnect', { id: remoteId })); if (dataConnection) { try { dataConnection.close(); } catch(e) {} dataConnection = null; } } } }, 12000); }
+  function disconnectManual() { if (dataConnection) { const remote = connectedRemoteId; dataConnection.close(); addSystemMessage(t('disconnectedFrom', { id: remote || 'peer' })); resetConnectionState(); } else { resetConnectionState(); showToast(t('notConnected')); } }
+  function getOrCreateFixedId() { let stored = localStorage.getItem(STORAGE_FIXED_ID); if (!stored) { stored = "fix-" + Math.random().toString(36).substring(2,12) + "-" + Date.now().toString(36); localStorage.setItem(STORAGE_FIXED_ID, stored); } return stored; }
+  function updateFixedIdUI() { document.getElementById('fixedIdDisplay').innerText = currentFixedId; }
+  function resetFixedId() { let newFixed = "fix-" + Math.random().toString(36).substring(2,14) + "-" + Date.now().toString(36); localStorage.setItem(STORAGE_FIXED_ID, newFixed); currentFixedId = newFixed; updateFixedIdUI(); showToast(t('fixedUpdated', { id: newFixed.substring(0,12) })); if (currentActiveMode === "fixed" && peer) switchToFixedMode(); }
+  async function destroyPeerAndRebuild(useFixedMode) { if (dataConnection) try { dataConnection.close(); } catch(e) {} isConnected = false; connectedRemoteId = null; connectingInProgress = false; if (peer) peer.destroy(); const newId = useFixedMode ? currentFixedId : undefined; currentActiveMode = useFixedMode ? "fixed" : "disposable"; document.getElementById('modeBadgeText').innerText = useFixedMode ? t('modeFixed') : t('modeDisposable'); try { peer = new Peer(newId); peer.on('open', (id) => { myId = id; document.getElementById('myPeerId').innerText = myId; updateConnectionStatusUI('Disconnected', false); addSystemMessage(`🔹 ${useFixedMode ? 'ID Fixo' : 'Modo Descartável'} ativo. Seu ID: ${id}`); document.getElementById('disposableHint').innerHTML = useFixedMode ? "aleatório" : `<strong>${id.substring(0,12)}...</strong>`; if (!preloaderHidden) hidePreloader(); }); peer.on('connection', (conn) => { if (isConnected && dataConnection) disconnectManual(); dataConnection = conn; setupDataConnectionEvents(conn, conn.peer); updateConnectionStatusUI('Connecting...', false); }); peer.on('error', (err) => { let errMsg = err.type === 'peer-unavailable' ? 'Peer offline' : err.message; showToast(errMsg); if (connectingInProgress) { connectingInProgress = false; resetConnectionState(); } if (!preloaderHidden) hidePreloader(); }); peer.on('disconnected', () => { if (isConnected) addSystemMessage("⚠️ Sinalização perdida"); }); } catch(e) { showToast("Falha na inicialização do Peer"); if (!preloaderHidden) hidePreloader(); } }
+  function switchToFixedMode() { if (isConnected) { showToast(t('switchModeDisconnect')); return; } destroyPeerAndRebuild(true); }
+  function switchToDisposableMode() { if (isConnected) { showToast(t('switchModeDisconnect')); return; } destroyPeerAndRebuild(false); }
+  function promptEncryptionKey() { let pass = prompt(t('encryptionPrompt'), encryptionPassphrase || ""); if (pass === null) return; if (pass.trim() === "") { disableEncryption(); } else { setEncryption(pass).then(success => { if (success) addSystemMessage(t('encryptEnabled')); }); } }
+  function updateUIForLanguage() { document.querySelector('.chat-title').innerHTML = `<i class="fas fa-shield-alt"></i> ${t('appTitle')}`; document.querySelector('.dual-id-panel .id-badge:first-child .id-label').innerHTML = `<i class="fas fa-lock"></i> ${t('fixedLabel')}`; document.querySelector('.dual-id-panel .id-badge:last-child .id-label').innerHTML = `<i class="fas fa-random"></i> ${t('disposableLabel')}`; document.getElementById('fixedBtnText').innerText = t('fixedBtnText'); document.getElementById('disposableBtnText').innerText = t('disposableBtnText'); document.getElementById('modeBadgeText').innerText = currentActiveMode === 'fixed' ? t('modeFixed') : t('modeDisposable'); document.getElementById('remotePeerId').placeholder = t('remotePlaceholder'); document.getElementById('connectBtnText').innerText = t('connectBtn'); document.getElementById('disconnectBtnText').innerText = t('disconnectBtn'); document.getElementById('messageInput').placeholder = t('msgPlaceholder'); updateEncryptionUI(); document.querySelector('.emoji-picker-header span').innerHTML = `<i class="far fa-smile-wink"></i> ${t('emojiPickerHeader')}`; document.querySelector('.modal-header span').innerHTML = `<i class="fas fa-address-book"></i> ${t('modalTitle')}`; document.getElementById('saveContactBtn').innerHTML = t('addUpdateBtn'); document.getElementById('contactNameInput').placeholder = t('contactNamePlaceholder'); document.getElementById('contactIdInput').placeholder = t('contactIdPlaceholder'); const initialSys = document.getElementById('messagesContainer').querySelector('.system-message'); if (initialSys && initialSys.innerText.includes('E2EE ready')) initialSys.innerHTML = t('sysInit') + ' <i class="fas fa-shield-virus"></i>'; }
+  function bindEvents() {
+    document.getElementById('connectBtn').onclick = () => { if (isConnected) showToast(t('alreadyConnected')); else { const rid = document.getElementById('remotePeerId').value.trim(); if (!rid) showToast(t('enterPeerId')); else connectToPeer(rid); } };
+    document.getElementById('disconnectBtn').onclick = disconnectManual;
+    document.getElementById('sendBtn').onclick = sendMessage;
+    document.getElementById('messageInput').onkeypress = (e) => { if (e.key === 'Enter' && isConnected && dataConnection?.open && !e.shiftKey) { e.preventDefault(); sendMessage(); } };
+    document.getElementById('messageInput').oninput = () => { if (!isConnected) return; if (localTypingTimer) clearTimeout(localTypingTimer); sendTypingStatus(true); localTypingTimer = setTimeout(() => sendTypingStatus(false), 1800); };
+    document.getElementById('messageInput').onblur = () => { if (localTypingTimer) clearTimeout(localTypingTimer); sendTypingStatus(false); };
+    document.getElementById('copyIdBtn').onclick = () => { if (myId) navigator.clipboard.writeText(myId).then(() => showToast(t('activeCopied'))).catch(() => showToast(t('copyManual'))); };
+    document.getElementById('clearChatBtn').onclick = clearChatHistory;
+    document.getElementById('recallLastPeerBtn').onclick = () => { const last = localStorage.getItem(STORAGE_LAST_REMOTE); if (last) { document.getElementById('remotePeerId').value = last; showToast(t('lastPeerLoaded', { id: last })); } else showToast(t('noPrevPeer')); };
+    document.getElementById('messagesContainer').onscroll = handleScrollVisibility;
+    document.getElementById('scrollToBottomBtn').onclick = scrollToBottom;
+    new MutationObserver(handleScrollVisibility).observe(document.getElementById('messagesContainer'), { childList: true, subtree: true });
+    document.getElementById('copyFixedIdBtn').onclick = () => { navigator.clipboard.writeText(currentFixedId).then(() => showToast(t('fixedCopied'))).catch(() => showToast(t('copyManual'))); };
+    document.getElementById('resetFixedIdBtn').onclick = () => { if (confirm(t('confirmResetFixed'))) resetFixedId(); };
+    document.getElementById('switchToFixedBtn').onclick = switchToFixedMode;
+    document.getElementById('switchToDisposableBtn').onclick = switchToDisposableMode;
+    document.getElementById('setEncryptionBtn').onclick = promptEncryptionKey;
+    document.getElementById('encryptionStatusBadge').onclick = promptEncryptionKey;
+    document.getElementById('emojiPickerBtn').onclick = (e) => { e.stopPropagation(); toggleEmojiPicker(); };
+    document.getElementById('closeEmojiPickerBtn').onclick = closeEmojiPicker;
+    document.addEventListener('click', handleClickOutsideEmoji);
+    document.getElementById('contactsBtn').onclick = openContactsModal;
+    document.getElementById('closeModalBtn').onclick = closeContactsModal;
+    document.getElementById('contactsModal').addEventListener('click', (e) => { if (e.target === document.getElementById('contactsModal')) closeContactsModal(); });
+    document.getElementById('saveContactBtn').onclick = handleSaveContact;
+  }
+  function startApp() { currentFixedId = getOrCreateFixedId(); updateFixedIdUI(); currentActiveMode = "disposable"; destroyPeerAndRebuild(false); bindEvents(); buildEmojiPicker(); loadContacts(); document.getElementById('messageInput').disabled = true; document.getElementById('sendBtn').disabled = true; loadLastRemoteId(); updateUIForLanguage(); addSystemMessage(t('sysMobile')); }
+  startApp();
 </script>
 </body>
 </html>
