@@ -48,7 +48,20 @@
     .timestamp { font-size: 0.6rem; color: #6c757d; margin: 0 5px; }
     .system-message { align-self: center; background: #e2e3e5; color: #383d41; padding: 6px 12px; border-radius: 30px; font-size: 0.7rem; text-align: center; font-style: italic; }
     .typing-indicator { align-self: flex-start; background: #eef2f3; padding: 6px 14px; border-radius: 20px; font-size: 0.7rem; color: #4a5568; margin-top: 5px; }
-    .chat-footer { background: white; padding: 8px 10px; display: flex; gap: 8px; border-top: 1px solid #e2e2e2; }
+    .chat-footer { 
+      background: white; 
+      padding: 8px 10px; 
+      display: flex; 
+      gap: 8px; 
+      border-top: 1px solid #e2e2e2;
+      /* Espaço para teclado virtual (iOS + Android) */
+      padding-bottom: max(8px, env(safe-area-inset-bottom));
+      transition: padding-bottom 0.2s ease;
+    }
+    /* Quando o campo de mensagem estiver focado, aumenta o padding inferior para dar espaço ao teclado */
+    .chat-footer.keyboard-visible {
+      padding-bottom: 12px;
+    }
     .input-wrapper { flex: 1; background: #f0f2f5; border-radius: 28px; display: flex; align-items: center; padding: 4px 12px; gap: 6px; }
     #messageInput { flex: 1; border: none; background: transparent; padding: 12px 4px; font-size: 1rem; outline: none; min-height: 44px; }
     /* Botão enviar - ícone maior e perfeitamente centralizado */
@@ -98,7 +111,18 @@
     .delete-contact { color: #dc2626; }
     .toast-message { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #323232e6; color: white; padding: 10px 18px; border-radius: 40px; font-size: 0.8rem; z-index: 1000; pointer-events: none; backdrop-filter: blur(8px); white-space: nowrap; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: translateY(0);} }
-    @media (max-width: 768px) { input, textarea, button { font-size: 16px; } .my-id-card { max-width: 140px; } .id-badge { flex: 1 1 100%; } .dual-id-panel .tool-group { width: 100%; justify-content: center; } #sendBtn { width: 52px; height: 52px; } #sendBtn i { font-size: 1.6rem; } }
+    @media (max-width: 768px) { 
+      input, textarea, button { font-size: 16px; } 
+      .my-id-card { max-width: 140px; } 
+      .id-badge { flex: 1 1 100%; } 
+      .dual-id-panel .tool-group { width: 100%; justify-content: center; } 
+      #sendBtn { width: 52px; height: 52px; } 
+      #sendBtn i { font-size: 1.6rem; }
+      /* Ajuste adicional para teclado em dispositivos pequenos */
+      .chat-footer.keyboard-visible {
+        padding-bottom: 20px;
+      }
+    }
     
     /* ======================= PRELOADER ======================= */
     .preloader {
@@ -208,7 +232,7 @@
   </div>
   <div class="messages-container" id="messagesContainer"><div class="system-message" id="initialSysMsg">🔒 E2EE pronto. Defina uma frase secreta compartilhada com seu amigo para chats criptografados. <i class="fas fa-shield-virus"></i></div></div>
   <div id="typingIndicatorArea" style="padding: 0 12px;"></div>
-  <div class="chat-footer">
+  <div class="chat-footer" id="chatFooter">
     <div class="input-wrapper"><i class="far fa-keyboard"></i><input type="text" id="messageInput" placeholder="Digite uma mensagem..." autocomplete="off" disabled></div>
     <button id="sendBtn" class="btn" disabled><i class="fas fa-paper-plane"></i></button>
   </div>
@@ -240,6 +264,36 @@
   };
   let currentLang = 'pt';
   function t(key, params = {}) { let str = translations.pt[key] || translations.pt[key] || key; Object.keys(params).forEach(k => str = str.replace(`{${k}}`, params[k])); return str; }
+  
+  // ======================= AJUSTE PARA TECLADO VIRTUAL =======================
+  const chatFooter = document.getElementById('chatFooter');
+  const messageInput = document.getElementById('messageInput');
+  
+  function handleKeyboardShow() {
+    if (chatFooter) {
+      chatFooter.classList.add('keyboard-visible');
+      // Rolar a última mensagem para vista
+      setTimeout(() => {
+        const container = document.getElementById('messagesContainer');
+        if (container) container.scrollTop = container.scrollHeight;
+      }, 100);
+    }
+  }
+  function handleKeyboardHide() {
+    if (chatFooter) {
+      chatFooter.classList.remove('keyboard-visible');
+    }
+  }
+  if (messageInput) {
+    messageInput.addEventListener('focus', handleKeyboardShow);
+    messageInput.addEventListener('blur', handleKeyboardHide);
+  }
+  // Também para o campo remotePeerId, caso precise (menos crítico)
+  const remoteInput = document.getElementById('remotePeerId');
+  if (remoteInput) {
+    remoteInput.addEventListener('focus', handleKeyboardShow);
+    remoteInput.addEventListener('blur', handleKeyboardHide);
+  }
   
   // ======================= PRELOADER =======================
   let preloaderHidden = false;
