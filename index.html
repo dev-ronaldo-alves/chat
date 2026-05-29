@@ -105,7 +105,7 @@
   </style>
 </head>
 <body>
-<div id="preloader" class="preloader"><div class="preloader-content"><div class="preloader-icon"><i class="fas fa-shield-alt"></i></div><div class="preloader-title">Chat Seguro P2P</div><div class="progress-container"><div class="progress-bar"></div></div><div class="preloader-sub"><i class="fas fa-key"></i> Carregando...</div></div></div>
+<div id="preloader" class="preloader"><div class="preloader-content"><div class="preloader-icon"><i class="fas fa-shield-alt"></i></div><div class="preloader-title">Chat Seguro P2P</div><div class="progress-container"><div class="progress-bar"></div></div><div class="preloader-sub"><i class="fas fa-key"></i> Carregando ambiente seguro...</div></div></div>
 
 <div class="chat-app">
   <div class="chat-header">
@@ -115,12 +115,12 @@
     </div>
     <div style="display: flex; align-items: center; gap: 8px;">
       <div id="connectionStatusBadge" class="status-badge status-offline"><i class="fas fa-plug"></i> <span>Offline</span></div>
-      <button id="toggleDrawerBtn" class="toggle-drawer-btn" title="Opções de conexão"><i class="fas fa-chevron-down"></i></button>
+      <button id="toggleDrawerBtn" class="toggle-drawer-btn" title="Opções de conexão"><i class="fas fa-chevron-up"></i></button>
     </div>
   </div>
 
-  <!-- DRAWER COLABSÍVEL (painéis de ID, modo e conexão) -->
-  <div id="drawerContainer" class="drawer-container collapsed">
+  <!-- DRAWER COLABSÍVEL (inicialmente expandido) -->
+  <div id="drawerContainer" class="drawer-container">
     <div class="drawer-inner">
       <div class="dual-id-panel">
         <div class="id-badge"><span class="id-label"><i class="fas fa-lock"></i> Fixo:</span><span class="id-value" id="fixedIdDisplay">----</span><button class="icon-mini" id="copyFixedIdBtn"><i class="fas fa-copy"></i></button><button class="icon-mini" id="resetFixedIdBtn"><i class="fas fa-sync-alt"></i></button></div>
@@ -154,8 +154,31 @@
 
 <script>
   // ======================= TRADUÇÕES =======================
-  const translations = { pt: { appTitle: "Chat Seguro P2P", fixedLabel: "Fixo:", disposableLabel: "Descartável:", fixedBtnText: "Fixo", disposableBtnText: "Descartável", modeFixed: "Modo: ID Fixo", modeDisposable: "Modo: Descartável", remotePlaceholder: "ID do amigo (Fixo ou Descartável)", connectBtn: "Conectar", disconnectBtn: "Desconectar", encryptionNone: "Sem criptografia", encryptionActive: "E2EE Ativo 🔒", msgPlaceholder: "Digite uma mensagem...", sysInit: "🔒 E2EE pronto. Defina uma frase secreta compartilhada com seu amigo para chats criptografados. 🛡️", sysMobile: "📱 Painel superior recolhido. Toque no ícone de engrenagem para configurar ID e conexão.", connectedTo: "✅ Conectado a {id}", connectionClosed: "🔌 Conexão encerrada com {id}", disconnectedFrom: "🔓 Desconectado de {id}", timeoutConnect: "⏰ Não foi possível conectar a {id}", failedConnect: "❌ Falha ao conectar a {id}", encryptEnabled: "🔒 Criptografia ativada!", encryptDisabled: "🔓 Criptografia desativada.", encryptFailed: "Falha ao definir chave", copySuccess: "✅ ID copiado", fixedUpdated: "ID fixo atualizado para {id}", confirmResetFixed: "Alterar seu ID fixo permanente?", cannotSelf: "Você não pode se conectar a si mesmo", alreadyConnected: "Já conectado. Desconecte primeiro.", enterPeerId: "Digite o ID do amigo", notConnected: "Não conectado", encryptionPrompt: "🔐 Criptografia E2EE\nDigite uma frase secreta compartilhada:", chatCleared: "🧹 Histórico limpo.", lastPeerLoaded: "Carregado: {id}", noPrevPeer: "Nenhum ID anterior", fixedCopied: "ID Fixo copiado", activeCopied: "ID ativo copiado", peerNotReady: "Peer não está pronto", initFailed: "Falha na inicialização", switchModeDisconnect: "Desconecte antes de trocar o modo de ID.", plaintextSendWarn: "⚠️ Enviando sem criptografia", plaintextReceiveWarn: "⚠️ Mensagem em texto simples enquanto criptografia ativa", typingFriend: "Amigo está digitando...", emojiPickerHeader: "Escolha um emoji", modalTitle: "Contatos", addUpdateBtn: "➕ Adicionar / Atualizar", noContacts: "✨ Nenhum contato ainda.", connectContact: "Conectar", editContact: "Editar", deleteContact: "Excluir", contactSaved: "Contato salvo", contactDeleted: "Contato excluído" } };
+  const translations = { pt: { appTitle: "Chat Seguro P2P", fixedLabel: "Fixo:", disposableLabel: "Descartável:", fixedBtnText: "Fixo", disposableBtnText: "Descartável", modeFixed: "Modo: ID Fixo", modeDisposable: "Modo: Descartável", remotePlaceholder: "ID do amigo (Fixo ou Descartável)", connectBtn: "Conectar", disconnectBtn: "Desconectar", encryptionNone: "Sem criptografia", encryptionActive: "E2EE Ativo 🔒", msgPlaceholder: "Digite uma mensagem...", sysInit: "🔒 E2EE pronto. Defina uma frase secreta compartilhada com seu amigo.", sysMobile: "📱 Painel superior recolhível. Use o ícone de engrenagem para configurar ID e conexão.", connectedTo: "✅ Conectado a {id}", connectionClosed: "🔌 Conexão encerrada com {id}", disconnectedFrom: "🔓 Desconectado de {id}", timeoutConnect: "⏰ Não foi possível conectar a {id}", failedConnect: "❌ Falha ao conectar a {id}", encryptEnabled: "🔒 Criptografia ativada!", encryptDisabled: "🔓 Criptografia desativada.", encryptFailed: "Falha ao definir chave", copySuccess: "✅ ID copiado", fixedUpdated: "ID fixo atualizado para {id}", confirmResetFixed: "Alterar seu ID fixo permanente? Conexões antigas serão perdidas.", cannotSelf: "Você não pode se conectar a si mesmo", alreadyConnected: "Já conectado. Desconecte primeiro.", enterPeerId: "Digite o ID do amigo", notConnected: "Não conectado", encryptionPrompt: "🔐 Criptografia E2EE\nDigite uma frase secreta compartilhada (deixe em branco para desativar):", chatCleared: "🧹 Histórico limpo.", lastPeerLoaded: "Carregado: {id}", noPrevPeer: "Nenhum ID anterior", fixedCopied: "ID Fixo copiado", activeCopied: "ID ativo copiado", peerNotReady: "Peer não está pronto", initFailed: "Falha na inicialização", switchModeDisconnect: "Desconecte antes de trocar o modo de ID.", plaintextSendWarn: "⚠️ Enviando sem criptografia", plaintextReceiveWarn: "⚠️ Mensagem em texto simples enquanto criptografia ativa", typingFriend: "Amigo está digitando...", emojiPickerHeader: "Escolha um emoji", modalTitle: "Contatos", addUpdateBtn: "➕ Adicionar / Atualizar", noContacts: "✨ Nenhum contato ainda.", connectContact: "Conectar", editContact: "Editar", deleteContact: "Excluir", contactSaved: "Contato salvo", contactDeleted: "Contato excluído" } };
   function t(key, params = {}) { let str = translations.pt[key] || key; Object.keys(params).forEach(k => str = str.replace(`{${k}}`, params[k])); return str; }
+  
+  // ======================= CONFIGURAÇÃO ICE ROBUSTA (STUN + TURN público) =======================
+  function getPeerConfig() {
+    return {
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' },
+          { urls: 'stun:stun3.l.google.com:19302' },
+          { urls: 'stun:stun4.l.google.com:19302' },
+          { urls: 'stun:stun.stunprotocol.org:3478' },
+          // TURN público (retransmissão) - ajuda em redes móveis restritivas
+          { urls: 'turn:turn.anyfirewall.com:443?transport=tcp', username: 'webrtc', credential: 'webrtc' },
+          { urls: 'turn:turn.anyfirewall.com:80?transport=udp', username: 'webrtc', credential: 'webrtc' }
+        ],
+        iceCandidatePoolSize: 10,
+        bundlePolicy: 'max-bundle',
+        rtcpMuxPolicy: 'require'
+      },
+      debug: 2  // logs detalhados no console para debug
+    };
+  }
   
   // ======================= KEYBOARD / MOBILE SCROLL =======================
   const messageInput = document.getElementById('messageInput');
@@ -166,7 +189,7 @@
   // ======================= PRELOADER =======================
   let preloaderHidden = false;
   function hidePreloader() { if (preloaderHidden) return; preloaderHidden = true; const preloader = document.getElementById('preloader'); if (preloader) { preloader.style.opacity = '0'; setTimeout(() => { preloader.style.display = 'none'; }, 600); } }
-  setTimeout(() => { if (!preloaderHidden) hidePreloader(); }, 5000);
+  setTimeout(() => { if (!preloaderHidden) hidePreloader(); }, 7000); // fallback seguro
   
   // ======================= CONTATOS =======================
   let contacts = [];
@@ -192,7 +215,7 @@
   function disableEncryption() { encryptionKey = null; encryptionPassphrase = null; updateEncryptionUI(); showToast(t('encryptDisabled')); addSystemMessage(t('encryptDisabled')); }
   function updateEncryptionUI() { const badge = document.getElementById('encryptionStatusBadge'), span = badge.querySelector('span'); if (encryptionKey) { badge.className = "encrypt-badge"; span.innerText = t('encryptionActive'); badge.style.background = "#1e5a1e"; } else { badge.className = "encrypt-badge plain"; span.innerText = t('encryptionNone'); badge.style.background = "#a16207"; } }
   
-  // ======================= PEERJS E CONEXÃO (código original adaptado) =======================
+  // ======================= PEERJS CORRIGIDO =======================
   let peer = null, myId = null, dataConnection = null, connectedRemoteId = null, isConnected = false, connectingInProgress = false, currentFixedId = "", currentActiveMode = "disposable";
   const STORAGE_FIXED_ID = "p2p_fixed_permanent_id", STORAGE_LAST_REMOTE = "p2p_last_remote_id";
   function showToast(msg) { let t = document.querySelector('.toast-message'); if (t) t.remove(); let d = document.createElement('div'); d.className = 'toast-message'; d.innerText = msg; document.body.appendChild(d); setTimeout(() => d.remove(), 2500); }
@@ -209,16 +232,35 @@
   function showRemoteTyping() { document.getElementById('typingIndicatorArea').innerHTML = `<div class="typing-indicator"><i class="fas fa-pen-fancy"></i> ${t('typingFriend')}</div>`; scrollToBottom(); if(remoteTypingTimeout) clearTimeout(remoteTypingTimeout); remoteTypingTimeout = setTimeout(() => hideRemoteTyping(), 3000); }
   function sendTypingStatus(isTyping) { if(!isConnected || !dataConnection?.open) return; dataConnection.send({ type: 'typing', typing: isTyping }); }
   function resetConnectionState() { if(dataConnection) try{ dataConnection.close(); }catch(e){} dataConnection = null; isConnected = false; connectedRemoteId = null; connectingInProgress = false; updateConnectionStatusUI('Disconnected', false); hideRemoteTyping(); }
-  function setupDataConnectionEvents(conn, remotePeerId) { conn.on('open', () => { isConnected = true; connectedRemoteId = remotePeerId; updateConnectionStatusUI('Connected', true, remotePeerId); addSystemMessage(t('connectedTo', { id: remotePeerId })); hideRemoteTyping(); document.getElementById('messageInput').disabled = false; document.getElementById('messageInput').focus(); saveLastRemoteId(remotePeerId); scrollInputIntoView(); }); conn.on('data', async (data) => { try { if (data.type === 'chat') { let finalText = data.text; if (data.encrypted && encryptionKey) { const decrypted = await decryptMessage(data.text); if (decrypted !== null) finalText = decrypted; else finalText = "🔒 [Falha]"; } else if (data.encrypted && !encryptionKey) finalText = "🔒 [Criptografado]"; else if (!data.encrypted && encryptionKey) addSystemMessage(t('plaintextReceiveWarn')); addChatMessage(finalText, false, data.timestamp); } else if (data.type === 'typing') data.typing ? showRemoteTyping() : hideRemoteTyping(); } catch(e){} }); conn.on('close', () => { if(isConnected) addSystemMessage(t('connectionClosed', { id: remotePeerId })); resetConnectionState(); }); conn.on('error', (err) => { showToast(`Erro: ${err.message}`); if(connectingInProgress){ connectingInProgress=false; updateConnectionStatusUI('Disconnected', false); addSystemMessage(t('failedConnect', { id: remotePeerId })); } else resetConnectionState(); }); }
+  function setupDataConnectionEvents(conn, remotePeerId) { 
+    conn.on('open', () => { isConnected = true; connectedRemoteId = remotePeerId; updateConnectionStatusUI('Connected', true, remotePeerId); addSystemMessage(t('connectedTo', { id: remotePeerId })); hideRemoteTyping(); document.getElementById('messageInput').disabled = false; document.getElementById('messageInput').focus(); saveLastRemoteId(remotePeerId); scrollInputIntoView(); }); 
+    conn.on('data', async (data) => { try { if (data.type === 'chat') { let finalText = data.text; if (data.encrypted && encryptionKey) { const decrypted = await decryptMessage(data.text); if (decrypted !== null) finalText = decrypted; else finalText = "🔒 [Falha]"; } else if (data.encrypted && !encryptionKey) finalText = "🔒 [Criptografado]"; else if (!data.encrypted && encryptionKey) addSystemMessage(t('plaintextReceiveWarn')); addChatMessage(finalText, false, data.timestamp); } else if (data.type === 'typing') data.typing ? showRemoteTyping() : hideRemoteTyping(); } catch(e){} }); 
+    conn.on('close', () => { if(isConnected) addSystemMessage(t('connectionClosed', { id: remotePeerId })); resetConnectionState(); }); 
+    conn.on('error', (err) => { console.error('conn error', err); showToast(`Erro: ${err.message}`); if(connectingInProgress){ connectingInProgress=false; updateConnectionStatusUI('Disconnected', false); addSystemMessage(t('failedConnect', { id: remotePeerId })); } else resetConnectionState(); }); 
+  }
   async function sendMessage() { let text = document.getElementById('messageInput').value.trim(); if(!text) return; if(!isConnected || !dataConnection?.open) { showToast(t('notConnected')); return; } const timestamp = new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }); let payload = { type:'chat', timestamp }; if(encryptionKey){ const encrypted = await encryptMessage(text); if(encrypted){ payload.text = encrypted; payload.encrypted = true; } else { payload.text = text; payload.encrypted = false; } } else { payload.text = text; payload.encrypted = false; if(!encryptionKey) addSystemMessage(t('plaintextSendWarn')); } dataConnection.send(payload); addChatMessage(text, true, timestamp); document.getElementById('messageInput').value = ''; document.getElementById('messageInput').focus(); sendTypingStatus(false); scrollInputIntoView(); }
-  function connectToPeer(remoteId) { if(!peer) { showToast(t('peerNotReady')); return; } if(!remoteId) { showToast(t('enterPeerId')); return; } if(remoteId === myId) { showToast(t('cannotSelf')); return; } if(isConnected) { showToast(t('alreadyConnected')); return; } connectingInProgress = true; updateConnectionStatusUI('Connecting...', false); const conn = peer.connect(remoteId, { reliable: true }); if(!conn) { showToast(t('initFailed')); connectingInProgress=false; updateConnectionStatusUI('Disconnected', false); return; } dataConnection = conn; setupDataConnectionEvents(conn, remoteId); setTimeout(() => { if(connectingInProgress && !isConnected) { connectingInProgress=false; if(!isConnected){ showToast(t('timeoutConnect', { id: remoteId })); resetConnectionState(); addSystemMessage(t('timeoutConnect', { id: remoteId })); if(dataConnection) try{ dataConnection.close(); }catch(e){} dataConnection=null; } } }, 12000); }
+  function connectToPeer(remoteId) { if(!peer) { showToast(t('peerNotReady')); return; } if(!remoteId) { showToast(t('enterPeerId')); return; } if(remoteId === myId) { showToast(t('cannotSelf')); return; } if(isConnected) { showToast(t('alreadyConnected')); return; } connectingInProgress = true; updateConnectionStatusUI('Connecting...', false); const conn = peer.connect(remoteId, { reliable: true }); if(!conn) { showToast(t('initFailed')); connectingInProgress=false; updateConnectionStatusUI('Disconnected', false); return; } dataConnection = conn; setupDataConnectionEvents(conn, remoteId); setTimeout(() => { if(connectingInProgress && !isConnected) { connectingInProgress=false; if(!isConnected){ showToast(t('timeoutConnect', { id: remoteId })); resetConnectionState(); addSystemMessage(t('timeoutConnect', { id: remoteId })); if(dataConnection) try{ dataConnection.close(); }catch(e){} dataConnection=null; } } }, 20000); } // timeout aumentado para 20s
   function disconnectManual() { if(dataConnection){ const remote = connectedRemoteId; dataConnection.close(); addSystemMessage(t('disconnectedFrom', { id: remote || 'peer' })); resetConnectionState(); } else { resetConnectionState(); showToast(t('notConnected')); } }
-  function getOrCreateFixedId() { let stored = localStorage.getItem(STORAGE_FIXED_ID); if(!stored){ stored = "fix-" + Math.random().toString(36).substring(2,12) + "-" + Date.now().toString(36); localStorage.setItem(STORAGE_FIXED_ID, stored); } return stored; }
+  function isValidPeerId(id) { return /^[A-Za-z0-9_-]+$/.test(id); }
+  function getOrCreateFixedId() { let stored = localStorage.getItem(STORAGE_FIXED_ID); if (!stored || !isValidPeerId(stored)) { stored = "fix_" + Math.random().toString(36).substring(2, 12) + "_" + Date.now().toString(36); localStorage.setItem(STORAGE_FIXED_ID, stored); } return stored; }
   function updateFixedIdUI() { document.getElementById('fixedIdDisplay').innerText = currentFixedId; }
-  function resetFixedId() { let newFixed = "fix-" + Math.random().toString(36).substring(2,14) + "-" + Date.now().toString(36); localStorage.setItem(STORAGE_FIXED_ID, newFixed); currentFixedId = newFixed; updateFixedIdUI(); showToast(t('fixedUpdated', { id: newFixed.substring(0,12) })); if(currentActiveMode === "fixed" && peer) switchToFixedMode(); }
-  async function destroyPeerAndRebuild(useFixedMode) { if(dataConnection) try{ dataConnection.close(); }catch(e){} resetConnectionState(); if(peer) peer.destroy(); const newId = useFixedMode ? currentFixedId : undefined; currentActiveMode = useFixedMode ? "fixed" : "disposable"; document.getElementById('modeBadgeText').innerText = useFixedMode ? t('modeFixed') : t('modeDisposable'); try { peer = new Peer(newId); peer.on('open', (id) => { myId = id; document.getElementById('myPeerId').innerText = myId; updateConnectionStatusUI('Disconnected', false); addSystemMessage(`🔹 ${useFixedMode ? 'ID Fixo' : 'Modo Descartável'} ativo. ID: ${id}`); document.getElementById('disposableHint').innerHTML = useFixedMode ? "aleatório" : `<strong>${id.substring(0,12)}...</strong>`; if(!preloaderHidden) hidePreloader(); }); peer.on('connection', (conn) => { if(isConnected && dataConnection) disconnectManual(); dataConnection = conn; setupDataConnectionEvents(conn, conn.peer); updateConnectionStatusUI('Connecting...', false); }); peer.on('error', (err) => { showToast(err.type === 'peer-unavailable' ? 'Peer offline' : err.message); if(connectingInProgress){ connectingInProgress=false; resetConnectionState(); } if(!preloaderHidden) hidePreloader(); }); } catch(e) { showToast("Falha Peer"); if(!preloaderHidden) hidePreloader(); } }
-  function switchToFixedMode() { if(isConnected) { showToast(t('switchModeDisconnect')); return; } destroyPeerAndRebuild(true); }
-  function switchToDisposableMode() { if(isConnected) { showToast(t('switchModeDisconnect')); return; } destroyPeerAndRebuild(false); }
+  function resetFixedId() { let newFixed = "fix_" + Math.random().toString(36).substring(2, 14) + "_" + Date.now().toString(36); localStorage.setItem(STORAGE_FIXED_ID, newFixed); currentFixedId = newFixed; updateFixedIdUI(); showToast(t('fixedUpdated', { id: newFixed.substring(0,12) })); if(currentActiveMode === "fixed" && peer) switchToFixedMode(); }
+  async function destroyPeerAndRebuild(useFixedMode) { 
+    if(isConnected) { showToast(t('switchModeDisconnect')); return; }
+    if(dataConnection) { dataConnection.close(); dataConnection = null; }
+    if(peer && !peer.destroyed) { await new Promise(resolve => { peer.once('close', resolve); peer.destroy(); setTimeout(resolve, 500); }); }
+    const newId = useFixedMode ? currentFixedId : undefined;
+    currentActiveMode = useFixedMode ? "fixed" : "disposable";
+    document.getElementById('modeBadgeText').innerText = useFixedMode ? t('modeFixed') : t('modeDisposable');
+    try {
+      peer = new Peer(newId, getPeerConfig());
+      peer.on('open', (id) => { myId = id; document.getElementById('myPeerId').innerText = myId; updateConnectionStatusUI('Disconnected', false); addSystemMessage(`🔹 ${useFixedMode ? 'ID Fixo' : 'Modo Descartável'} ativo. ID: ${id}`); document.getElementById('disposableHint').innerHTML = useFixedMode ? "aleatório" : `<strong>${id.substring(0,12)}...</strong>`; if(!preloaderHidden) hidePreloader(); });
+      peer.on('connection', (conn) => { if(isConnected && dataConnection) disconnectManual(); dataConnection = conn; setupDataConnectionEvents(conn, conn.peer); updateConnectionStatusUI('Connecting...', false); });
+      peer.on('error', (err) => { console.error('Peer error:', err); showToast(err.message); if(connectingInProgress){ connectingInProgress=false; resetConnectionState(); } if(!preloaderHidden) hidePreloader(); });
+    } catch(e) { showToast("Falha crítica ao inicializar Peer"); console.error(e); if(!preloaderHidden) hidePreloader(); }
+  }
+  function switchToFixedMode() { destroyPeerAndRebuild(true); }
+  function switchToDisposableMode() { destroyPeerAndRebuild(false); }
   function promptEncryptionKey() { let pass = prompt(t('encryptionPrompt'), encryptionPassphrase || ""); if(pass === null) return; if(pass.trim() === "") disableEncryption(); else setEncryption(pass).then(success => { if(success) addSystemMessage(t('encryptEnabled')); }); }
   
   // ======================= DRAWER TOGGLE =======================
@@ -263,7 +305,7 @@
     document.getElementById('saveContactBtn').onclick = handleSaveContact;
   }
   
-  function startApp() { currentFixedId = getOrCreateFixedId(); updateFixedIdUI(); currentActiveMode = "disposable"; destroyPeerAndRebuild(false); bindEvents(); buildEmojiPicker(); loadContacts(); document.getElementById('messageInput').disabled = true; document.getElementById('sendBtn').disabled = true; loadLastRemoteId(); updateEncryptionUI(); addSystemMessage(t('sysMobile')); setTimeout(() => { if(!preloaderHidden) hidePreloader(); }, 800); }
+  function startApp() { currentFixedId = getOrCreateFixedId(); updateFixedIdUI(); currentActiveMode = "disposable"; destroyPeerAndRebuild(false); bindEvents(); buildEmojiPicker(); loadContacts(); document.getElementById('messageInput').disabled = true; document.getElementById('sendBtn').disabled = true; loadLastRemoteId(); updateEncryptionUI(); addSystemMessage(t('sysMobile')); }
   startApp();
 </script>
 </body>
