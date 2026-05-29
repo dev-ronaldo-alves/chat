@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes, maximum-scale=1.0">
-  <title>Chat Seguro P2P · E2EE + Contatos + Emojis + ID Duplo</title>
+  <title>Chat Seguro P2P · E2EE + Contatos + Emojis + ID Único</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%236366f1;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%238b5cf6;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='48' fill='url(%23grad)'/%3E%3Cpath fill='%23ffffff' d='M50 15 L22 28 L22 52 C22 68 36 82 50 85 C64 82 78 68 78 52 L78 28 L50 15 Z M46 62 L34 50 L38 46 L46 54 L62 38 L66 42 L46 62 Z'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
@@ -110,7 +110,7 @@
       align-items: center; 
       gap: 6px; 
       font-family: monospace;
-      max-width: 150px; 
+      max-width: 180px; 
       overflow: hidden;
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255,255,255,0.2);
@@ -134,14 +134,10 @@
     .dual-id-panel { background: white; padding: 12px 14px; border-radius: 16px; margin-bottom: 12px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 0.7rem; box-shadow: var(--shadow-sm); border: 1px solid var(--neutral-200); }
     .id-badge { background: linear-gradient(135deg, #f0f9ff 0%, #ede9fe 100%); border-radius: 12px; padding: 8px 12px; display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; flex: 1 1 auto; box-shadow: var(--shadow-sm); border: 1px solid var(--primary-light); }
     .id-label { font-weight: 700; color: var(--primary-dark); display: flex; align-items: center; gap: 4px; }
-    .id-value { font-family: monospace; background: white; padding: 3px 8px; border-radius: 20px; color: var(--primary-main); font-size: 0.65rem; max-width: 110px; overflow: hidden; text-overflow: ellipsis; border: 1px solid var(--primary-light); }
+    .id-value { font-family: monospace; background: white; padding: 3px 8px; border-radius: 20px; color: var(--primary-main); font-size: 0.65rem; max-width: 150px; overflow: hidden; text-overflow: ellipsis; border: 1px solid var(--primary-light); }
     
     .icon-mini { background: transparent; border: none; font-size: 0.8rem; cursor: pointer; padding: 6px; border-radius: 8px; color: var(--primary-main); min-width: 32px; transition: all 0.2s ease; }
     .icon-mini:hover { background: var(--primary-light); color: white; transform: scale(1.1); }
-    
-    .mode-badge { background: linear-gradient(135deg, var(--primary-main) 0%, var(--secondary-main) 100%); color: white; border-radius: 50px; padding: 6px 12px; font-size: 0.65rem; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; font-weight: 600; box-shadow: var(--shadow-md); }
-    .btn-small { background: white; border: 1px solid var(--primary-light); padding: 6px 12px; border-radius: 20px; font-size: 0.65rem; font-weight: 600; color: var(--primary-main); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.2s ease; }
-    .btn-small:hover { background: var(--primary-light); color: white; transform: translateY(-2px); box-shadow: var(--shadow-md); }
     
     .connection-panel { background: white; padding: 10px 12px; border-radius: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 4px; box-shadow: var(--shadow-sm); border: 1px solid var(--neutral-200); }
     .remote-input-group { flex: 3; min-width: 180px; display: flex; gap: 8px; background: var(--bg-secondary); border-radius: 12px; padding: 6px 12px; align-items: center; border: 1px solid var(--neutral-200); }
@@ -216,7 +212,7 @@
     
     @media (max-width: 768px) { 
       input, textarea, button { font-size: 16px; } 
-      .my-id-card { max-width: 130px; } 
+      .my-id-card { max-width: 150px; } 
       #sendBtn { width: 50px; height: 50px; } 
     }
   </style>
@@ -246,13 +242,15 @@
   <div id="drawerContainer" class="drawer-container">
     <div class="drawer-inner">
       <div class="dual-id-panel">
-        <div class="id-badge"><span class="id-label"><i class="fas fa-lock"></i> Fixo:</span><span class="id-value" id="fixedIdDisplay">----</span><button class="icon-mini" id="copyFixedIdBtn"><i class="fas fa-copy"></i></button><button class="icon-mini" id="resetFixedIdBtn"><i class="fas fa-sync-alt"></i></button></div>
-        <div class="id-badge"><span class="id-label"><i class="fas fa-random"></i> Descartável:</span><span class="id-value" id="disposableHint">sessão</span></div>
-        <div class="tool-group"><button class="btn-small" id="switchToFixedBtn"><i class="fas fa-star-of-life"></i> <span id="fixedBtnText">Fixo</span></button><button class="btn-small" id="switchToDisposableBtn"><i class="fas fa-waveform"></i> <span id="disposableBtnText">Descartável</span></button></div>
-        <div class="mode-badge" id="activeIdModeBadge"><i class="fas fa-id-card"></i> <span id="modeBadgeText">Modo: Descartável</span></div>
+        <div class="id-badge">
+          <span class="id-label"><i class="fas fa-lock"></i> Seu ID Único:</span>
+          <span class="id-value" id="fixedIdDisplay">----</span>
+          <button class="icon-mini" id="copyFixedIdBtn" title="Copiar ID"><i class="fas fa-copy"></i></button>
+          <button class="icon-mini" id="resetFixedIdBtn" title="Gerar Novo ID"><i class="fas fa-sync-alt"></i></button>
+        </div>
       </div>
       <div class="connection-panel">
-        <div class="remote-input-group"><i class="fas fa-user-friends"></i><input type="text" id="remotePeerId" placeholder="ID do amigo (Fixo ou Descartável)" autocomplete="off"></div>
+        <div class="remote-input-group"><i class="fas fa-user-friends"></i><input type="text" id="remotePeerId" placeholder="ID do amigo" autocomplete="off"></div>
         <div class="action-buttons"><button id="connectBtn" class="btn"><i class="fas fa-link"></i> <span id="connectBtnText">Conectar</span></button><button id="disconnectBtn" class="btn btn-outline"><i class="fas fa-unlink"></i> <span id="disconnectBtnText">Desconectar</span></button></div>
       </div>
     </div>
@@ -307,7 +305,7 @@
 
 <script>
   // ======================= TRADUÇÕES =======================
-  const translations = { pt: { appTitle: "Chat Seguro P2P", fixedLabel: "Fixo:", disposableLabel: "Descartável:", fixedBtnText: "Fixo", disposableBtnText: "Descartável", modeFixed: "Modo: ID Fixo", modeDisposable: "Modo: Descartável", remotePlaceholder: "ID do amigo (Fixo ou Descartável)", connectBtn: "Conectar", disconnectBtn: "Desconectar", encryptionNone: "Sem criptografia", encryptionActive: "E2EE Ativo 🔒", msgPlaceholder: "Digite uma mensagem...", sysInit: "🔒 E2EE pronto. Defina uma frase secreta compartilhada com seu amigo.", sysMobile: "📱 Painel superior recolhível. Use o ícone de engrenagem para configurar ID e conexão.", connectedTo: "✅ Conectado a {id}", connectionClosed: "🔌 Conexão encerrada com {id}", disconnectedFrom: "🔓 Desconectado de {id}", timeoutConnect: "⏰ Não foi possível conectar a {id}", failedConnect: "❌ Falha ao conectar a {id}", encryptEnabled: "🔒 Criptografia ativada!", encryptDisabled: "🔓 Criptografia desativada.", encryptFailed: "Falha ao definir chave", copySuccess: "✅ ID copiado", fixedUpdated: "ID fixo atualizado para {id}", confirmResetFixed: "Alterar seu ID fixo permanente? Conexões antigas serão perdidas.", cannotSelf: "Você não pode se conectar a si mesmo", alreadyConnected: "Já conectado. Desconecte primeiro.", enterPeerId: "Digite o ID do amigo", notConnected: "Não conectado", encryptionPrompt: "🔐 Criptografia E2EE\nDigite uma frase secreta compartilhada (deixe em branco para desativar):", chatCleared: "🧹 Histórico limpo.", lastPeerLoaded: "Carregado: {id}", noPrevPeer: "Nenhum ID anterior", fixedCopied: "ID Fixo copiado", activeCopied: "ID ativo copiado", peerNotReady: "Peer não está pronto", initFailed: "Falha na inicialização", switchModeDisconnect: "Desconecte antes de trocar o modo de ID.", plaintextSendWarn: "⚠️ Enviando sem criptografia", plaintextReceiveWarn: "⚠️ Mensagem em texto simples enquanto criptografia ativa", typingFriend: "Amigo está digitando...", emojiPickerHeader: "Escolha um emoji", modalTitle: "Contatos", addUpdateBtn: "➕ Adicionar / Atualizar", noContacts: "✨ Nenhum contato ainda.", connectContact: "Conectar", editContact: "Editar", deleteContact: "Excluir", contactSaved: "Contato salvo", contactDeleted: "Contato excluído" } };
+  const translations = { pt: { appTitle: "Chat Seguro P2P", fixedLabel: "ID Único:", connectedTo: "✅ Conectado a {id}", connectionClosed: "🔌 Conexão encerrada com {id}", disconnectedFrom: "🔓 Desconectado de {id}", timeoutConnect: "⏰ Não foi possível conectar a {id}", failedConnect: "❌ Falha ao conectar a {id}", encryptEnabled: "🔒 Criptografia ativada!", encryptDisabled: "🔓 Criptografia desativada.", encryptFailed: "Falha ao definir chave", copySuccess: "✅ ID copiado", fixedUpdated: "ID Único atualizado para {id}", confirmResetFixed: "Deseja gerar um novo ID Único? Conexões antigas serão perdidas.", cannotSelf: "Você não pode se conectar a si mesmo", alreadyConnected: "Já conectado. Desconecte primeiro.", enterPeerId: "Digite o ID do amigo", notConnected: "Não conectado", encryptionPrompt: "🔐 Criptografia E2EE\nDigite uma frase secreta compartilhada (deixe em branco para desativar):", chatCleared: "🧹 Histórico limpo.", lastPeerLoaded: "Carregado: {id}", noPrevPeer: "Nenhum ID anterior", fixedCopied: "ID Único copiado", activeCopied: "ID Único copiado", peerNotReady: "Peer não está pronto", initFailed: "Falha na inicialização", plaintextSendWarn: "⚠️ Enviando sem criptografia", typingFriend: "Amigo está digitando...", noContacts: "✨ Nenhum contato ainda.", contactSaved: "Contato salvo", contactDeleted: "Contato excluído" } };
   function t(key, params = {}) { let str = translations.pt[key] || key; Object.keys(params).forEach(k => str = str.replace(`{${k}}`, params[k])); return str; }
   
   // ======================= CONFIGURAÇÃO ICE =======================
@@ -363,12 +361,12 @@
     });
     document.querySelectorAll('.connect-contact').forEach(btn => btn.addEventListener('click', () => { 
       const peerId = btn.getAttribute('data-peerid'); 
-      if (peerId) { document.getElementById('remotePeerId').value = peerId; closeContactsModal(); showToast(`🔗 ${t('connectContact')}`); connectToPeer(peerId); } 
+      if (peerId) { document.getElementById('remotePeerId').value = peerId; closeContactsModal(); showToast(`🔗 Conectar`); connectToPeer(peerId); } 
     }));
     document.querySelectorAll('.edit-contact').forEach(btn => { 
       const id = btn.getAttribute('data-id'); 
       const c = contacts.find(c => c.id == id); 
-      if (c) { document.getElementById('contactNameInput').value = c.name; document.getElementById('contactIdInput').value = c.peerId; document.getElementById('editingContactId').value = c.id; document.getElementById('saveContactBtn').innerHTML = t('addUpdateBtn'); } 
+      if (c) { document.getElementById('contactNameInput').value = c.name; document.getElementById('contactIdInput').value = c.peerId; document.getElementById('editingContactId').value = c.id; document.getElementById('saveContactBtn').innerHTML = "➕ Atualizar"; } 
     });
     document.querySelectorAll('.delete-contact').forEach(btn => btn.addEventListener('click', () => { 
       const id = btn.getAttribute('data-id'); 
@@ -396,12 +394,12 @@
   async function decryptMessage(encryptedBase64) { if (!encryptionKey) return null; try { const binary = atob(encryptedBase64); const combined = new Uint8Array(binary.length); for (let i=0; i<binary.length; i++) combined[i]=binary.charCodeAt(i); const iv = combined.slice(0,12), cipher = combined.slice(12); const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, encryptionKey, cipher); return new TextDecoder().decode(decrypted); } catch(e) { return null; } }
   async function setEncryption(passphrase) { if (!passphrase?.trim()) { encryptionKey = null; encryptionPassphrase = null; updateEncryptionUI(); return false; } try { encryptionKey = await deriveKeyFromPassphrase(passphrase); encryptionPassphrase = passphrase; updateEncryptionUI(); return true; } catch(e) { return false; } }
   function disableEncryption() { encryptionKey = null; encryptionPassphrase = null; updateEncryptionUI(); showToast(t('encryptDisabled')); addSystemMessage(t('encryptDisabled')); }
-  function updateEncryptionUI() { const badge = document.getElementById('encryptionStatusBadge'), span = document.getElementById('encryptionBadgeText'); if (encryptionKey) { badge.className = "encrypt-badge"; span.innerText = t('encryptionActive'); } else { badge.className = "encrypt-badge plain"; span.innerText = t('encryptionNone'); } }
+  function updateEncryptionUI() { const badge = document.getElementById('encryptionStatusBadge'), span = document.getElementById('encryptionBadgeText'); if (encryptionKey) { badge.className = "encrypt-badge"; span.innerText = "E2EE Ativo 🔒"; } else { badge.className = "encrypt-badge plain"; span.innerText = "Sem criptografia"; } }
   
   // ======================= PEERJS =======================
-  let peer = null, myId = null, dataConnection = null, connectedRemoteId = null, isConnected = false, connectingInProgress = false, currentFixedId = "", currentActiveMode = "disposable";
+  let peer = null, myId = null, dataConnection = null, connectedRemoteId = null, isConnected = false, currentFixedId = "";
   const STORAGE_FIXED_ID = "p2p_fixed_permanent_id", STORAGE_LAST_REMOTE = "p2p_last_remote_id";
-  let localTypingTimer = null, remoteTypingTimeout = null;
+  let remoteTypingTimeout = null;
 
   function showToast(msg) { 
     const tMsg = document.getElementById('toastMessage'); 
@@ -436,7 +434,7 @@
   function hideRemoteTyping() { document.getElementById('typingIndicatorArea').innerHTML = ''; }
   function showRemoteTyping() { document.getElementById('typingIndicatorArea').innerHTML = `<div class="typing-indicator"><i class="fas fa-pen-fancy"></i> ${t('typingFriend')}</div>`; scrollToBottom(); if(remoteTypingTimeout) clearTimeout(remoteTypingTimeout); remoteTypingTimeout = setTimeout(() => hideRemoteTyping(), 3000); }
   function sendTypingStatus(isTyping) { if(!isConnected || !dataConnection?.open) return; dataConnection.send({ type: 'typing', typing: isTyping }); }
-  function resetConnectionState() { dataConnection = null; isConnected = false; connectedRemoteId = null; connectingInProgress = false; updateConnectionStatusUI('Disconnected', false); hideRemoteTyping(); document.getElementById('messageInput').disabled = true; document.getElementById('sendBtn').disabled = true; }
+  function resetConnectionState() { dataConnection = null; isConnected = false; connectedRemoteId = null; updateConnectionStatusUI('Disconnected', false); hideRemoteTyping(); document.getElementById('messageInput').disabled = true; document.getElementById('sendBtn').disabled = true; }
   
   function setupDataConnectionEvents(conn, remotePeerId) { 
     conn.on('open', () => { isConnected = true; connectedRemoteId = remotePeerId; updateConnectionStatusUI('Connected', true, remotePeerId); addSystemMessage(t('connectedTo', { id: remotePeerId })); document.getElementById('messageInput').disabled = false; document.getElementById('sendBtn').disabled = false; document.getElementById('messageInput').focus(); localStorage.setItem(STORAGE_LAST_REMOTE, remotePeerId); }); 
@@ -458,46 +456,28 @@
   
   function connectToPeer(remoteId) { 
     if(!peer || !remoteId || remoteId === myId || isConnected) return; 
-    connectingInProgress = true; updateConnectionStatusUI('Connecting...', false); 
+    updateConnectionStatusUI('Connecting...', false); 
     const conn = peer.connect(remoteId, { reliable: true }); 
     dataConnection = conn; setupDataConnectionEvents(conn, remoteId); 
   }
   
-  function getOrCreateFixedId() { let stored = localStorage.getItem(STORAGE_FIXED_ID); if (!stored) { stored = "fix_" + Math.random().toString(36).substring(2, 10); localStorage.setItem(STORAGE_FIXED_ID, stored); } return stored; }
+  function getOrCreateFixedId() { let stored = localStorage.getItem(STORAGE_FIXED_ID); if (!stored) { stored = "p2p_" + Math.random().toString(36).substring(2, 12); localStorage.setItem(STORAGE_FIXED_ID, stored); } return stored; }
   
-  async function destroyPeerAndRebuild(useFixedMode) { 
-    if(isConnected) return;
+  async function initPeer() { 
     if(peer) peer.destroy();
-    const newId = useFixedMode ? currentFixedId : undefined;
-    currentActiveMode = useFixedMode ? "fixed" : "disposable";
-    document.getElementById('modeBadgeText').innerText = useFixedMode ? t('modeFixed') : t('modeDisposable');
-    peer = new Peer(newId, getPeerConfig());
-    peer.on('open', (id) => { myId = id; document.getElementById('myPeerId').innerText = myId; document.getElementById('fixedIdDisplay').innerText = currentFixedId; document.getElementById('disposableHint').innerText = useFixedMode ? "aleatório" : id.substring(0,8)+"..."; hidePreloader(); });
+    peer = new Peer(currentFixedId, getPeerConfig());
+    peer.on('open', (id) => { myId = id; document.getElementById('myPeerId').innerText = myId; document.getElementById('fixedIdDisplay').innerText = myId; hidePreloader(); addSystemMessage(`✅ Seu ID Único está ativo.`); });
     peer.on('connection', (conn) => { dataConnection = conn; setupDataConnectionEvents(conn, conn.peer); });
     peer.on('error', (err) => { showToast(err.message); hidePreloader(); });
   }
   
-  // ======================= DRAWER =======================
-  document.getElementById('toggleDrawerBtn').onclick = () => { 
-    const drawer = document.getElementById('drawerContainer');
-    drawer.classList.toggle('collapsed');
-    document.getElementById('toggleDrawerBtn').querySelector('i').className = drawer.classList.contains('collapsed') ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
-  };
-  
-  // ======================= EMOJI =======================
-  const emojis = ["😀","😃","😄","😁","😆","😅","😂","🤣","😊","😇","🙂","🙃","😉","😌","😍","🥰","😘","😗","😙","😚","😋","😛","😝","😜","🤪","🤨","🧐","🤓","😎","🤩","🥳","😏","😒","😞","😔","😟","😕","🙁","☹️","😣","😖","😫","😩","🥺","😢","😭","😤","😠","😡","🤬","🤯","😳","🥵","🥶","😱","😨","😰","😥","😓","🤗","🤔","🤭","🤫","🤥","😶","😐","😑","😬","🙄","😯","😦","😧","😮","😲","🥱","😴","🤤","😪","😵","🤐","🥴","🤢","🤮","🤧","😷","🤒","🤕","🤑","🤠","😈","👿","👹","👺","💀","👻","👽","🤖","💩","😺","😸","😹","😻","😼","😽","🙀","😿","😾","🙈","🙉","🙊","💋","💌","💘","💝","💖","💗","💓","💞","💕","💟","❤️","🧡","💛","💚","💙","💜","🤎","🖤","🤍","💯","❤️‍🔥","💔","❣️","💭","👋","🤚","✋","🖖","👌","🤌","🤏","✌️","🤞","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","👍","👎","✊","👊","🤛","🤜","👏","🙌","👐","🤲","🤝","🙏","✍️","💅","🤳","💪","🦾","🦿","🦵","🦶","👂","🦻","👃","🧠","🦷","🦴","👀","👁️","👅","👄","💋","🫀","🫁","🗣️","👤","👥","🫂","👶","🧒","👦","👧","🧑","👩","🧔","👨","🧓","👴","👵"];
-  function buildEmojiPicker() { 
-    const grid = document.getElementById('emojiGrid'); 
-    grid.innerHTML = ''; 
-    emojis.slice(0, 60).forEach(emoji => { 
-      const btn = document.createElement('div'); btn.className = 'emoji-item'; btn.textContent = emoji; 
-      btn.onclick = () => { document.getElementById('messageInput').value += emoji; document.getElementById('emojiPicker').style.display = 'none'; }; 
-      grid.appendChild(btn); 
-    }); 
-  }
-  
   // ======================= BINDINGS =======================
   function bindEvents() {
+    document.getElementById('toggleDrawerBtn').onclick = () => { 
+      const drawer = document.getElementById('drawerContainer');
+      drawer.classList.toggle('collapsed');
+      document.getElementById('toggleDrawerBtn').querySelector('i').className = drawer.classList.contains('collapsed') ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
+    };
     document.getElementById('connectBtn').onclick = () => connectToPeer(document.getElementById('remotePeerId').value.trim());
     document.getElementById('disconnectBtn').onclick = () => { if(dataConnection) dataConnection.close(); resetConnectionState(); };
     document.getElementById('sendBtn').onclick = sendMessage;
@@ -509,21 +489,28 @@
     document.getElementById('contactsBtn').onclick = openContactsModal;
     document.getElementById('closeModalBtn').onclick = closeContactsModal;
     document.getElementById('saveContactBtn').onclick = handleSaveContact;
-    document.getElementById('switchToFixedBtn').onclick = () => destroyPeerAndRebuild(true);
-    document.getElementById('switchToDisposableBtn').onclick = () => destroyPeerAndRebuild(false);
-    document.getElementById('copyFixedIdBtn').onclick = () => { navigator.clipboard.writeText(currentFixedId); showToast(t('fixedCopied')); };
-    document.getElementById('resetFixedIdBtn').onclick = () => { if(confirm(t('confirmResetFixed'))) { localStorage.removeItem(STORAGE_FIXED_ID); currentFixedId = getOrCreateFixedId(); document.getElementById('fixedIdDisplay').innerText = currentFixedId; } };
+    document.getElementById('copyFixedIdBtn').onclick = () => { navigator.clipboard.writeText(myId); showToast(t('fixedCopied')); };
+    document.getElementById('resetFixedIdBtn').onclick = () => { if(confirm(t('confirmResetFixed'))) { localStorage.removeItem(STORAGE_FIXED_ID); currentFixedId = getOrCreateFixedId(); initPeer(); } };
     document.getElementById('setEncryptionBtn').onclick = () => { const p = prompt(t('encryptionPrompt')); if(p !== null) setEncryption(p).then(() => addSystemMessage(t('encryptEnabled'))); };
     document.getElementById('recallLastPeerBtn').onclick = () => { const last = localStorage.getItem(STORAGE_LAST_REMOTE); if(last) document.getElementById('remotePeerId').value = last; };
+    
+    // Typing indicator
+    let localTypingTimer = null;
+    document.getElementById('messageInput').oninput = () => { if(!isConnected) return; if(localTypingTimer) clearTimeout(localTypingTimer); sendTypingStatus(true); localTypingTimer = setTimeout(() => sendTypingStatus(false), 1800); };
   }
   
   function startApp() { 
     currentFixedId = getOrCreateFixedId(); 
     loadContacts(); 
     bindEvents(); 
-    buildEmojiPicker(); 
-    destroyPeerAndRebuild(false); 
-    addSystemMessage(t('sysMobile'));
+    const grid = document.getElementById('emojiGrid'); 
+    const emojis = ["😀","😃","😄","😁","😆","😅","😂","🤣","😊","😇","🙂","🙃","😉","😌","😍","🥰","😘","😗","😙","😚","😋","😛","😝","😜","🤪","🤨","🧐","🤓","😎","🤩","🥳","😏","😒","😞","😔","😟","😕","🙁","☹️","😣","😖","😫","😩","🥺","😢","😭","😤","😠","😡","🤬","🤯","😳","🥵","🥶","😱","😨","😰","😥","😓","🤗","🤔","🤭","🤫","🤥","😶","😐","😑","😬","🙄","😯","😦","😧","😮","😲","🥱","😴","🤤","😪","😵","🤐","🥴","🤢","🤮","🤧","😷","🤒","🤕","🤑","🤠","😈","👿","👹","👺","💀","👻","👽","🤖","💩","😺","😸","😹","😻","😼","😽","🙀","😿","😾","🙈","🙉","🙊","💋","💌","💘","💝","💖","💗","💓","💞","💕","💟","❤️","🧡","💛","💚","💙","💜","🤎","🖤","🤍","💯","❤️‍🔥","💔","❣️","💭","👋","🤚","✋","🖖","👌","🤌","🤏","✌️","🤞","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","👍","👎","✊","👊","🤛","🤜","👏","🙌","👐","🤲","🤝","🙏","✍️","💅","🤳","💪","🦾","🦿","🦵","🦶","👂","🦻","👃","🧠","🦷","🦴","👀","👁️","👅","👄","💋","🫀","🫁","🗣️","👤","👥","🫂","👶","🧒","👦","👧","🧑","👩","🧔","👨","🧓","👴","👵"];
+    emojis.slice(0, 60).forEach(emoji => { 
+      const btn = document.createElement('div'); btn.className = 'emoji-item'; btn.textContent = emoji; 
+      btn.onclick = () => { document.getElementById('messageInput').value += emoji; document.getElementById('emojiPicker').style.display = 'none'; }; 
+      grid.appendChild(btn); 
+    }); 
+    initPeer(); 
   }
   startApp();
 </script>
