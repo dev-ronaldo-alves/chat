@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes, maximum-scale=1.0">
-  <title>Chat Seguro P2P · E2EE + Contatos + Emojis + ID Único</title>
+  <title>Chat Seguro P2P · E2EE + Inbox + Histórico</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%236366f1;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%238b5cf6;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='48' fill='url(%23grad)'/%3E%3Cpath fill='%23ffffff' d='M50 15 L22 28 L22 52 C22 68 36 82 50 85 C64 82 78 68 78 52 L78 28 L50 15 Z M46 62 L34 50 L38 46 L46 54 L62 38 L66 42 L46 62 Z'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
@@ -151,8 +151,9 @@
     
     .chat-toolbar { display: flex; justify-content: space-between; align-items: center; background: var(--bg-secondary); padding: 8px 12px; border-bottom: 1px solid var(--neutral-200); flex-wrap: wrap; gap: 10px; flex-shrink: 0; }
     .tool-group { display: flex; gap: 8px; align-items: center; }
-    .icon-btn { background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 8px; border-radius: 10px; color: var(--primary-main); min-width: 44px; min-height: 44px; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; }
-    .icon-btn:hover { background: var(--primary-light); color: white; transform: scale(1.1); }
+    .icon-btn { background: transparent; border: none; font-size: 1.2rem; cursor: pointer; padding: 8px; border-radius: 10px; color: var(--primary-main); min-width: 44px; min-height: 44px; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; position: relative; }
+    .icon-btn:hover { background: var(--primary-light); color: white; transform: scale(1.05); }
+    .badge-unread { position: absolute; top: 0; right: 0; background: var(--accent-main); color: white; border-radius: 50%; font-size: 0.65rem; padding: 2px 5px; min-width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-weight: bold; }
     
     .encrypt-badge { background: linear-gradient(135deg, var(--success-main) 0%, var(--success-light) 100%); color: white; border-radius: 50px; padding: 6px 12px; font-size: 0.7rem; font-weight: bold; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; box-shadow: var(--shadow-md); }
     .encrypt-badge.plain { background: linear-gradient(135deg, var(--accent-main) 0%, var(--accent-light) 100%); }
@@ -177,7 +178,8 @@
     #sendBtn i { font-size: 1.6rem; }
     #sendBtn:hover:not(:disabled) { transform: scale(1.05); box-shadow: var(--shadow-lg); }
     
-    .scroll-btn { position: absolute; bottom: 80px; right: 14px; background: linear-gradient(135deg, var(--primary-main) 0%, var(--secondary-main) 100%); color: white; border: none; border-radius: 50%; width: 48px; height: 48px; font-size: 1.1rem; cursor: pointer; box-shadow: var(--shadow-lg); z-index: 10; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
+    .scroll-btn { position: absolute; bottom: 80px; right: 14px; background: linear-gradient(135deg, var(--primary-main) 0%, var(--secondary-main) 100%); color: white; border: none; border-radius: 50%; width: 48px; height: 48px; font-size: 1.1rem; cursor: pointer; box-shadow: var(--shadow-lg); z-index: 10; display: none; align-items: center; justify-content: center; transition: all 0.2s ease; }
+    .scroll-btn:hover { transform: scale(1.08); }
     
     .emoji-picker-container { position: fixed; bottom: 80px; left: 10px; right: 10px; max-width: 95%; background: white; border-radius: 20px; box-shadow: var(--shadow-xl); z-index: 200; display: none; flex-direction: column; overflow: hidden; }
     @media (min-width: 500px) { .emoji-picker-container { left: auto; right: auto; width: 380px; margin: 0 auto; } }
@@ -186,34 +188,62 @@
     .emoji-item { font-size: 1.8rem; text-align: center; padding: 10px 6px; cursor: pointer; border-radius: 12px; background: white; min-height: 60px; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; border: 1px solid var(--neutral-200); }
     .emoji-item:hover { background: var(--primary-light); transform: scale(1.15); box-shadow: var(--shadow-md); }
     
-    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 300; display: none; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
-    .contacts-modal { background: white; border-radius: 20px; width: 90%; max-width: 450px; max-height: 80vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow-xl); }
-    .modal-header { background: linear-gradient(135deg, var(--primary-main) 0%, var(--secondary-main) 100%); color: white; padding: 16px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; }
-    .modal-body { padding: 16px; overflow-y: auto; flex: 1; }
-    .contact-form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%); padding: 14px; border-radius: 16px; border: 1px solid var(--neutral-200); }
-    .contact-form input { padding: 12px 14px; border-radius: 12px; border: 1px solid var(--neutral-200); font-size: 0.9rem; background: white; transition: all 0.2s ease; }
-    .contact-form button { background: linear-gradient(135deg, var(--primary-main) 0%, var(--secondary-main) 100%); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: all 0.2s ease; box-shadow: var(--shadow-md); }
-    .contact-list { display: flex; flex-direction: column; gap: 12px; max-height: 300px; overflow-y: auto; }
-    .contact-item { background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%); border-radius: 16px; padding: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border: 1px solid var(--neutral-200); transition: all 0.2s ease; }
-    .contact-actions button { background: var(--primary-main); color: white; border: none; padding: 8px; border-radius: 8px; cursor: pointer; }
+    .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 300; display: none; align-items: center; justify-content: center; animation: fadeIn 0.2s ease; }
+    .inbox-modal, .contacts-modal { background: white; border-radius: 28px; width: 92%; max-width: 550px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: var(--shadow-xl); animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+    .modal-header { background: linear-gradient(135deg, var(--primary-main) 0%, var(--secondary-main) 100%); color: white; padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 1.1rem; }
+    .modal-header button { background: rgba(255,255,255,0.2); border: none; color: white; font-size: 1.6rem; cursor: pointer; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .modal-header button:hover { background: rgba(255,255,255,0.4); transform: scale(1.05); }
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+    .contact-form, .inbox-search { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%); padding: 18px; border-radius: 24px; border: 1px solid var(--neutral-200); }
+    .contact-form input, .inbox-search input { padding: 14px 16px; border-radius: 16px; border: 1px solid var(--neutral-200); font-size: 0.95rem; background: white; transition: all 0.2s; }
+    .contact-form input:focus, .inbox-search input:focus { outline: none; border-color: var(--primary-main); box-shadow: 0 0 0 3px rgba(99,102,241,0.2); }
+    .contact-form button, .inbox-action-btn { background: linear-gradient(135deg, var(--primary-main) 0%, var(--secondary-main) 100%); color: white; border: none; padding: 14px; border-radius: 18px; font-weight: bold; cursor: pointer; transition: all 0.2s; font-size: 0.95rem; }
+    .contact-form button:hover, .inbox-action-btn:hover { transform: scale(1.02); box-shadow: var(--shadow-md); }
+    .contact-list, .conversation-list { display: flex; flex-direction: column; gap: 12px; max-height: 350px; overflow-y: auto; padding-right: 4px; }
+    .contact-item, .conversation-item { background: white; border-radius: 20px; padding: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; border: 1px solid var(--neutral-200); cursor: pointer; transition: all 0.2s; box-shadow: var(--shadow-sm); }
+    .contact-item:hover, .conversation-item:hover { transform: translateX(6px); background: var(--bg-tertiary); border-color: var(--primary-light); }
+    /* Botões de ação na lista de contatos - estilo melhorado */
+    .contact-actions { display: flex; gap: 10px; }
+    .contact-action-btn { background: white; border: none; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; color: var(--primary-main); font-size: 1rem; box-shadow: var(--shadow-sm); }
+    .contact-action-btn.connect { background: linear-gradient(135deg, var(--success-main), var(--success-light)); color: white; }
+    .contact-action-btn.edit { background: linear-gradient(135deg, var(--primary-main), var(--secondary-main)); color: white; }
+    .contact-action-btn.delete { background: linear-gradient(135deg, var(--accent-main), var(--accent-light)); color: white; }
+    .contact-action-btn:hover { transform: scale(1.1); box-shadow: var(--shadow-md); }
+    .conversation-info { flex: 1; }
+    .conversation-name { font-weight: 700; font-size: 1rem; margin-bottom: 4px; }
+    .conversation-preview { font-size: 0.8rem; color: var(--neutral-600); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px; }
+    .conversation-time { font-size: 0.7rem; color: var(--neutral-500); margin-top: 4px; }
+    .unread-badge { background: var(--accent-main); border-radius: 30px; padding: 4px 10px; font-size: 0.7rem; font-weight: bold; color: white; }
+    .delete-conv-btn, .export-conv-btn { background: transparent; border: none; font-size: 1.1rem; cursor: pointer; padding: 6px; border-radius: 12px; transition: all 0.2s; }
+    .delete-conv-btn { color: var(--accent-main); }
+    .export-conv-btn { color: var(--primary-main); }
+    .delete-conv-btn:hover, .export-conv-btn:hover { background: var(--neutral-200); transform: scale(1.1); }
+    .message-history { display: flex; flex-direction: column; gap: 12px; max-height: 60vh; overflow-y: auto; padding: 4px; }
+    .history-back { background: none; border: none; color: var(--primary-main); font-size: 0.9rem; cursor: pointer; padding: 8px 0; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; transition: 0.2s; }
+    .history-back:hover { color: var(--primary-dark); transform: translateX(-3px); }
+    .load-more-btn { text-align: center; background: var(--bg-secondary); border: 1px solid var(--neutral-200); padding: 10px; border-radius: 30px; cursor: pointer; margin-top: 12px; font-size: 0.8rem; transition: 0.2s; }
+    .load-more-btn:hover { background: var(--bg-tertiary); }
     
-    .toast-message { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--neutral-900); color: white; padding: 12px 18px; border-radius: 50px; font-size: 0.85rem; z-index: 1000; pointer-events: none; backdrop-filter: blur(10px); white-space: nowrap; max-width: 90vw; text-overflow: ellipsis; overflow: hidden; box-shadow: var(--shadow-lg); border: 1px solid rgba(255,255,255,0.1); }
-    
-    .preloader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, var(--primary-main) 0%, var(--secondary-main) 100%); display: flex; align-items: center; justify-content: center; z-index: 20000; transition: opacity 0.6s ease; }
+    /* Preloader melhorado */
+    .preloader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, var(--primary-main) 0%, var(--secondary-main) 100%); display: flex; align-items: center; justify-content: center; z-index: 20000; transition: opacity 0.6s ease; flex-direction: column; gap: 20px; }
     .preloader-content { text-align: center; color: white; padding: 24px; max-width: 280px; width: 80%; }
     .preloader-icon { font-size: 4.5rem; margin-bottom: 1.2rem; animation: pulseIcon 1.2s infinite alternate; }
-    .preloader-title { font-size: 1.8rem; font-weight: 700; margin-bottom: 1rem; }
+    .preloader-title { font-size: 1.8rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .preloader-sub { font-size: 0.9rem; opacity: 0.9; margin-top: 1rem; }
     .progress-container { background: rgba(255,255,255,0.25); border-radius: 100px; height: 6px; width: 100%; overflow: hidden; margin: 1rem 0; border: 1px solid rgba(255,255,255,0.3); }
     .progress-bar { width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-main) 0%, var(--accent-light) 100%); border-radius: 100px; animation: loadingProgress 1.8s infinite cubic-bezier(0.45, 0.05, 0.55, 0.95); }
+    .preloader-error { display: none; color: #ffcccc; margin-top: 15px; font-size: 0.8rem; }
     
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     @keyframes pulseIcon { 0% { transform: scale(0.96); opacity: 0.9; } 100% { transform: scale(1.08); opacity: 1; } }
     @keyframes loadingProgress { 0% { width: 0%; } 50% { width: 70%; } 100% { width: 100%; } }
     
     @media (max-width: 768px) { 
       input, textarea, button { font-size: 16px; } 
       .my-id-card { max-width: 150px; } 
-      #sendBtn { width: 50px; height: 50px; } 
+      #sendBtn { width: 50px; height: 50px; }
+      .conversation-preview { max-width: 180px; }
     }
   </style>
 </head>
@@ -223,7 +253,8 @@
     <div class="preloader-icon"><i class="fas fa-shield-alt"></i></div>
     <div class="preloader-title">Chat Seguro P2P</div>
     <div class="progress-container"><div class="progress-bar"></div></div>
-    <div class="preloader-sub"><i class="fas fa-key"></i> Carregando ambiente seguro...</div>
+    <div class="preloader-sub"><i class="fas fa-key"></i> Conectando ao servidor P2P...</div>
+    <div id="preloaderError" class="preloader-error"><i class="fas fa-exclamation-triangle"></i> Falha na conexão. Tente recarregar.</div>
   </div>
 </div>
 
@@ -233,9 +264,9 @@
       <span class="chat-title"><i class="fas fa-shield-alt"></i> P2P Seguro</span>
       <div class="my-id-card"><i class="fas fa-id-card"></i><span id="myPeerId">carregando...</span><button class="copy-id-btn" id="copyIdBtn"><i class="fas fa-copy"></i></button></div>
     </div>
-    <div style="display: flex; align-items: center; gap: 10px; position: relative; z-index: 1;">
+    <div style="display: flex; align-items: center; gap: 10px;">
       <div id="connectionStatusBadge" class="status-badge status-offline"><i class="fas fa-plug"></i> <span>Offline</span></div>
-      <button id="toggleDrawerBtn" class="toggle-drawer-btn" title="Opções de conexão"><i class="fas fa-chevron-up"></i></button>
+      <button id="toggleDrawerBtn" class="toggle-drawer-btn"><i class="fas fa-chevron-up"></i></button>
     </div>
   </div>
 
@@ -251,20 +282,29 @@
       </div>
       <div class="connection-panel">
         <div class="remote-input-group"><i class="fas fa-user-friends"></i><input type="text" id="remotePeerId" placeholder="ID do amigo" autocomplete="off"></div>
-        <div class="action-buttons"><button id="connectBtn" class="btn"><i class="fas fa-link"></i> <span id="connectBtnText">Conectar</span></button><button id="disconnectBtn" class="btn btn-outline"><i class="fas fa-unlink"></i> <span id="disconnectBtnText">Desconectar</span></button></div>
+        <div class="action-buttons"><button id="connectBtn" class="btn"><i class="fas fa-link"></i> Conectar</button><button id="disconnectBtn" class="btn btn-outline"><i class="fas fa-unlink"></i> Desconectar</button></div>
       </div>
     </div>
   </div>
 
   <div class="chat-toolbar">
-    <div class="tool-group"><button id="clearChatBtn" class="icon-btn" title="Limpar chat"><i class="fas fa-trash-alt"></i></button><button id="emojiPickerBtn" class="icon-btn" title="Emojis"><i class="far fa-smile-wink"></i></button><button id="contactsBtn" class="icon-btn" title="Contatos"><i class="fas fa-address-book"></i></button><button id="recallLastPeerBtn" class="icon-btn" title="Último contato"><i class="fas fa-history"></i></button></div>
-    <div class="tool-group"><div id="encryptionStatusBadge" class="encrypt-badge plain"><i class="fas fa-unlock"></i> <span id="encryptionBadgeText">Sem criptografia</span></div><button id="setEncryptionBtn" class="icon-btn"><i class="fas fa-key"></i></button></div>
+    <div class="tool-group">
+      <button id="clearChatBtn" class="icon-btn" title="Limpar chat"><i class="fas fa-trash-alt"></i></button>
+      <button id="emojiPickerBtn" class="icon-btn" title="Emojis"><i class="far fa-smile-wink"></i></button>
+      <button id="contactsBtn" class="icon-btn" title="Contatos"><i class="fas fa-address-book"></i></button>
+      <button id="recallLastPeerBtn" class="icon-btn" title="Último contato"><i class="fas fa-history"></i></button>
+      <button id="inboxBtn" class="icon-btn" title="Caixa de entrada"><i class="fas fa-inbox"></i><span id="inboxUnreadBadge" class="badge-unread" style="display: none;">0</span></button>
+    </div>
+    <div class="tool-group">
+      <div id="encryptionStatusBadge" class="encrypt-badge plain"><i class="fas fa-unlock"></i> <span>Sem criptografia</span></div>
+      <button id="setEncryptionBtn" class="icon-btn"><i class="fas fa-key"></i></button>
+    </div>
   </div>
 
-  <div class="messages-container" id="messagesContainer"><div class="system-message" id="initialSysMsg">🔒 E2EE pronto. Defina uma frase secreta compartilhada com seu amigo para chats criptografados. <i class="fas fa-shield-virus"></i></div></div>
+  <div class="messages-container" id="messagesContainer"><div class="system-message" id="initialSysMsg">🔒 E2EE pronto. Defina uma frase secreta compartilhada com seu amigo para chats criptografados.</div></div>
   <div id="typingIndicatorArea" style="padding: 0 12px;"></div>
   
-  <div class="chat-footer" id="chatFooter">
+  <div class="chat-footer">
     <div class="input-wrapper">
       <i class="far fa-keyboard" style="color: var(--primary-main);"></i>
       <input type="text" id="messageInput" placeholder="Digite uma mensagem..." autocomplete="off" disabled>
@@ -272,31 +312,32 @@
     <button id="sendBtn" disabled><i class="fas fa-paper-plane"></i></button>
   </div>
   
-  <button id="scrollToBottomBtn" class="scroll-btn" style="display: none;"><i class="fas fa-chevron-down"></i></button>
+  <button id="scrollToBottomBtn" class="scroll-btn"><i class="fas fa-chevron-down"></i></button>
 
   <div id="emojiPicker" class="emoji-picker-container">
-    <div class="emoji-picker-header">
-      <span><i class="far fa-smile-wink"></i> Escolha um emoji</span>
-      <button class="close-emoji-picker" id="closeEmojiPickerBtn" style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">&times;</button>
-    </div>
+    <div class="emoji-picker-header"><span><i class="far fa-smile-wink"></i> Escolha um emoji</span><button class="close-emoji-picker" id="closeEmojiPickerBtn">&times;</button></div>
     <div class="emoji-grid" id="emojiGrid"></div>
   </div>
 
   <div id="contactsModal" class="modal-overlay">
     <div class="contacts-modal">
-      <div class="modal-header">
-        <span><i class="fas fa-address-book"></i> Contatos</span>
-        <button id="closeModalBtn" style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">&times;</button>
-      </div>
+      <div class="modal-header"><span><i class="fas fa-address-book"></i> Contatos</span><button id="closeModalBtn">&times;</button></div>
       <div class="modal-body">
         <div class="contact-form">
-          <input type="text" id="contactNameInput" placeholder="Nome do contato" autocomplete="off">
-          <input type="text" id="contactIdInput" placeholder="ID do amigo" autocomplete="off">
+          <input type="text" id="contactNameInput" placeholder="Nome do contato">
+          <input type="text" id="contactIdInput" placeholder="ID do amigo">
           <button id="saveContactBtn">➕ Adicionar / Atualizar</button>
           <input type="hidden" id="editingContactId" value="">
         </div>
         <div id="contactsList" class="contact-list">Carregando...</div>
       </div>
+    </div>
+  </div>
+
+  <div id="inboxModal" class="modal-overlay">
+    <div class="inbox-modal">
+      <div class="modal-header"><span><i class="fas fa-inbox"></i> Caixa de entrada</span><button id="closeInboxBtn">&times;</button></div>
+      <div class="modal-body" id="inboxModalBody"></div>
     </div>
   </div>
 </div>
@@ -305,31 +346,162 @@
 
 <script>
   // ======================= TRADUÇÕES =======================
-  const translations = { pt: { appTitle: "Chat Seguro P2P", fixedLabel: "ID Único:", connectedTo: "✅ Conectado a {id}", connectionClosed: "🔌 Conexão encerrada com {id}", disconnectedFrom: "🔓 Desconectado de {id}", timeoutConnect: "⏰ Não foi possível conectar a {id}", failedConnect: "❌ Falha ao conectar a {id}", encryptEnabled: "🔒 Criptografia ativada!", encryptDisabled: "🔓 Criptografia desativada.", encryptFailed: "Falha ao definir chave", copySuccess: "✅ ID copiado", fixedUpdated: "ID Único atualizado para {id}", confirmResetFixed: "Deseja gerar um novo ID Único? Conexões antigas serão perdidas.", cannotSelf: "Você não pode se conectar a si mesmo", alreadyConnected: "Já conectado. Desconecte primeiro.", enterPeerId: "Digite o ID do amigo", notConnected: "Não conectado", encryptionPrompt: "🔐 Criptografia E2EE\nDigite uma frase secreta compartilhada (deixe em branco para desativar):", chatCleared: "🧹 Histórico limpo.", lastPeerLoaded: "Carregado: {id}", noPrevPeer: "Nenhum ID anterior", fixedCopied: "ID Único copiado", activeCopied: "ID Único copiado", peerNotReady: "Peer não está pronto", initFailed: "Falha na inicialização", plaintextSendWarn: "⚠️ Enviando sem criptografia", typingFriend: "Amigo está digitando...", noContacts: "✨ Nenhum contato ainda.", contactSaved: "Contato salvo", contactDeleted: "Contato excluído" } };
-  function t(key, params = {}) { let str = translations.pt[key] || key; Object.keys(params).forEach(k => str = str.replace(`{${k}}`, params[k])); return str; }
+  const t = (key, params = {}) => {
+    const dict = { connectedTo: "✅ Conectado a {id}", connectionClosed: "🔌 Conexão encerrada com {id}", encryptEnabled: "🔒 Criptografia ativada!", encryptDisabled: "🔓 Criptografia desativada.", confirmResetFixed: "Deseja gerar um novo ID Único? Conexões antigas serão perdidas.", notConnected: "Desconectado", encryptionPrompt: "🔐 Criptografia E2EE\nDigite uma frase secreta compartilhada (deixe em branco para desativar):", chatCleared: "🧹 Histórico limpo.", typingFriend: "Amigo está digitando...", noContacts: "✨ Nenhum contato ainda.", contactSaved: "Contato salvo", contactDeleted: "Contato excluído", noConversations: "📭 Nenhuma conversa encontrada." };
+    let str = dict[key] || key;
+    Object.keys(params).forEach(k => str = str.replace(`{${k}}`, params[k]));
+    return str;
+  };
+  
+  // ======================= INDEXEDDB =======================
+  let db = null;
+  function initDB() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open('p2p_chat_db', 3);
+      request.onupgradeneeded = (event) => {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains('messages')) {
+          const store = db.createObjectStore('messages', { keyPath: 'id', autoIncrement: true });
+          store.createIndex('conversationId', 'conversationId', { unique: false });
+          store.createIndex('timestamp', 'timestamp', { unique: false });
+        }
+        if (!db.objectStoreNames.contains('conversations')) {
+          db.createObjectStore('conversations', { keyPath: 'conversationId' });
+        }
+      };
+      request.onsuccess = (event) => { db = event.target.result; resolve(); };
+      request.onerror = (event) => reject(event.target.error);
+    });
+  }
+  function getConversationId(peer1, peer2) { return [peer1, peer2].sort().join('_'); }
+  async function saveMessage(conversationId, remotePeerId, direction, text, timestampISO, isEncrypted, read) {
+    if (!db) return;
+    const tx = db.transaction(['messages'], 'readwrite');
+    tx.objectStore('messages').add({ conversationId, remotePeerId, direction, text, timestamp: timestampISO, isEncrypted, read });
+    await tx.done;
+    updateUnreadBadge();
+  }
+  async function getConversationsList() {
+    if (!db) return [];
+    return new Promise((resolve) => {
+      const tx = db.transaction(['messages'], 'readonly');
+      const store = tx.objectStore('messages');
+      const index = store.index('timestamp');
+      const request = index.openCursor(null, 'prev');
+      const convMap = new Map();
+      request.onsuccess = (e) => {
+        const cursor = e.target.result;
+        if (cursor) {
+          const msg = cursor.value;
+          const convId = msg.conversationId;
+          if (!convMap.has(convId)) {
+            const contactName = getContactNameById(msg.remotePeerId) || msg.remotePeerId.slice(0, 12);
+            convMap.set(convId, {
+              conversationId: convId,
+              remotePeerId: msg.remotePeerId,
+              contactName,
+              lastMessage: msg.text,
+              lastTimestamp: msg.timestamp,
+              unreadCount: (msg.direction === 'received' && !msg.read) ? 1 : 0
+            });
+          } else {
+            const existing = convMap.get(convId);
+            if (msg.direction === 'received' && !msg.read) existing.unreadCount++;
+          }
+          cursor.continue();
+        } else resolve(Array.from(convMap.values()));
+      };
+    });
+  }
+  async function getMessagesForConversation(conversationId, limit = 50, offset = 0) {
+    if (!db) return [];
+    return new Promise((resolve) => {
+      const tx = db.transaction(['messages'], 'readonly');
+      const index = tx.objectStore('messages').index('conversationId');
+      const request = index.openCursor(IDBKeyRange.only(conversationId), 'next');
+      const messages = [];
+      let skipped = 0;
+      request.onsuccess = (e) => {
+        const cursor = e.target.result;
+        if (cursor && messages.length < limit) {
+          if (skipped < offset) { skipped++; cursor.continue(); }
+          else { messages.push(cursor.value); cursor.continue(); }
+        } else resolve(messages);
+      };
+    });
+  }
+  async function markConversationRead(conversationId) {
+    if (!db) return;
+    const tx = db.transaction(['messages'], 'readwrite');
+    const store = tx.objectStore('messages');
+    const index = store.index('conversationId');
+    const request = index.openCursor(IDBKeyRange.only(conversationId));
+    request.onsuccess = (e) => {
+      const cursor = e.target.result;
+      if (cursor) {
+        if (cursor.value.direction === 'received' && !cursor.value.read) {
+          const data = cursor.value;
+          data.read = true;
+          cursor.update(data);
+        }
+        cursor.continue();
+      }
+    };
+    await tx.done;
+    updateUnreadBadge();
+  }
+  async function deleteConversation(conversationId) {
+    if (!db) return;
+    const tx = db.transaction(['messages'], 'readwrite');
+    const store = tx.objectStore('messages');
+    const index = store.index('conversationId');
+    const request = index.openCursor(IDBKeyRange.only(conversationId));
+    request.onsuccess = (e) => {
+      const cursor = e.target.result;
+      if (cursor) { cursor.delete(); cursor.continue(); }
+    };
+    await tx.done;
+    updateUnreadBadge();
+  }
+  async function getTotalUnread() {
+    if (!db) return 0;
+    const messages = await new Promise((resolve) => {
+      const tx = db.transaction(['messages'], 'readonly');
+      const store = tx.objectStore('messages');
+      const request = store.getAll();
+      request.onsuccess = () => resolve(request.result);
+    });
+    return messages.filter(m => m.direction === 'received' && !m.read).length;
+  }
+  async function updateUnreadBadge() {
+    const unread = await getTotalUnread();
+    const badge = document.getElementById('inboxUnreadBadge');
+    if (unread > 0) { badge.innerText = unread > 9 ? '9+' : unread; badge.style.display = 'flex'; }
+    else badge.style.display = 'none';
+  }
+  function getContactNameById(peerId) {
+    const contact = contacts.find(c => c.peerId === peerId);
+    return contact ? contact.name : null;
+  }
+  async function exportConversation(conversationId, remotePeerId) {
+    const messages = await getMessagesForConversation(conversationId, 9999);
+    const data = { conversationId, remotePeerId, messages, exportDate: new Date().toISOString() };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `chat_${remotePeerId.slice(0,8)}.json`;
+    a.click(); URL.revokeObjectURL(url);
+    showToast('Conversa exportada');
+  }
   
   // ======================= CONFIGURAÇÃO ICE =======================
-  function getPeerConfig() {
-    return {
-      config: {
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' },
-          { urls: 'stun:stun2.l.google.com:19302' },
-          { urls: 'turn:turn.anyfirewall.com:443?transport=tcp', username: 'webrtc', credential: 'webrtc' }
-        ],
-        iceCandidatePoolSize: 10
-      },
-      debug: 2
-    };
-  }
+  function getPeerConfig() { return { config: { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }, { urls: 'stun:stun2.l.google.com:19302' }, { urls: 'turn:turn.anyfirewall.com:443?transport=tcp', username: 'webrtc', credential: 'webrtc' }], iceCandidatePoolSize: 10 }, debug: 2 }; }
   
   // ======================= UI HELPERS =======================
   const messageInput = document.getElementById('messageInput');
   function scrollInputIntoView() { setTimeout(() => { if (document.activeElement === messageInput) messageInput.scrollIntoView({ behavior: "smooth", block: "center" }); }, 200); }
   messageInput.addEventListener('focus', scrollInputIntoView);
   
-  // ======================= PRELOADER =======================
   let preloaderHidden = false;
   function hidePreloader() { 
     if (preloaderHidden) return; 
@@ -340,11 +512,27 @@
       setTimeout(() => { preloader.style.display = 'none'; }, 600); 
     } 
   }
-  setTimeout(() => { if (!preloaderHidden) hidePreloader(); }, 7000);
+  function showPreloaderError() {
+    const errorDiv = document.getElementById('preloaderError');
+    if (errorDiv) errorDiv.style.display = 'block';
+    setTimeout(() => hidePreloader(), 4000);
+  }
+  
+  function showToast(msg) { const tMsg = document.getElementById('toastMessage'); tMsg.innerText = msg; tMsg.style.display = 'block'; setTimeout(() => { tMsg.style.display = 'none'; }, 2500); }
+  function addSystemMessage(text) { const div = document.createElement('div'); div.className = 'system-message'; div.innerText = text; document.getElementById('messagesContainer').appendChild(div); scrollToBottom(); }
+  function addChatMessage(text, isLocal, timestamp = null) { 
+    const wrapper = document.createElement('div'); wrapper.className = `message-bubble ${isLocal ? 'message-right' : 'message-left'}`; 
+    const bubble = document.createElement('div'); bubble.className = 'bubble'; bubble.innerText = text; 
+    const timeSpan = document.createElement('div'); timeSpan.className = 'timestamp'; timeSpan.innerText = timestamp || new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }); 
+    wrapper.appendChild(bubble); wrapper.appendChild(timeSpan); 
+    document.getElementById('messagesContainer').appendChild(wrapper); 
+    scrollToBottom(); 
+  }
+  function scrollToBottom() { const c = document.getElementById('messagesContainer'); c.scrollTop = c.scrollHeight; }
+  function clearChatHistory() { const container = document.getElementById('messagesContainer'); while(container.firstChild) container.removeChild(container.firstChild); addSystemMessage(t('chatCleared')); }
   
   // ======================= CONTATOS =======================
-  let contacts = [];
-  const CONTACTS_STORAGE = "p2p_contacts";
+  let contacts = []; const CONTACTS_STORAGE = "p2p_contacts";
   function loadContacts() { const stored = localStorage.getItem(CONTACTS_STORAGE); contacts = stored ? JSON.parse(stored) : []; }
   function saveContacts() { localStorage.setItem(CONTACTS_STORAGE, JSON.stringify(contacts)); }
   function escapeHtml(str) { return str?.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])) || ''; }
@@ -354,23 +542,27 @@
     if (contacts.length === 0) { container.innerHTML = `<div class="system-message">✨ ${t('noContacts')}</div>`; return; } 
     container.innerHTML = ''; 
     contacts.forEach(contact => { 
-      const div = document.createElement('div'); 
-      div.className = 'contact-item'; 
-      div.innerHTML = `<div class="contact-info"><div class="contact-name">${escapeHtml(contact.name)}</div><div class="contact-id">${escapeHtml(contact.peerId)}</div></div><div class="contact-actions"><button class="connect-contact" data-peerid="${escapeHtml(contact.peerId)}"><i class="fas fa-plug"></i></button><button class="edit-contact" data-id="${contact.id}"><i class="fas fa-edit"></i></button><button class="delete-contact" data-id="${contact.id}"><i class="fas fa-trash"></i></button></div>`; 
+      const div = document.createElement('div'); div.className = 'contact-item'; 
+      div.innerHTML = `<div><div class="conversation-name">${escapeHtml(contact.name)}</div><div class="conversation-preview">${escapeHtml(contact.peerId)}</div></div>
+                       <div class="contact-actions">
+                         <button class="contact-action-btn connect" data-peerid="${escapeHtml(contact.peerId)}" title="Conectar"><i class="fas fa-plug"></i></button>
+                         <button class="contact-action-btn edit" data-id="${contact.id}" title="Editar"><i class="fas fa-edit"></i></button>
+                         <button class="contact-action-btn delete" data-id="${contact.id}" title="Excluir"><i class="fas fa-trash"></i></button>
+                       </div>`; 
       container.appendChild(div); 
     });
-    document.querySelectorAll('.connect-contact').forEach(btn => btn.addEventListener('click', () => { 
+    document.querySelectorAll('.connect').forEach(btn => btn.addEventListener('click', () => { 
       const peerId = btn.getAttribute('data-peerid'); 
-      if (peerId) { document.getElementById('remotePeerId').value = peerId; closeContactsModal(); showToast(`🔗 Conectar`); connectToPeer(peerId); } 
+      if (peerId) { document.getElementById('remotePeerId').value = peerId; closeContactsModal(); connectToPeer(peerId); } 
     }));
-    document.querySelectorAll('.edit-contact').forEach(btn => { 
+    document.querySelectorAll('.edit').forEach(btn => { 
       const id = btn.getAttribute('data-id'); 
       const c = contacts.find(c => c.id == id); 
       if (c) { document.getElementById('contactNameInput').value = c.name; document.getElementById('contactIdInput').value = c.peerId; document.getElementById('editingContactId').value = c.id; document.getElementById('saveContactBtn').innerHTML = "➕ Atualizar"; } 
     });
-    document.querySelectorAll('.delete-contact').forEach(btn => btn.addEventListener('click', () => { 
+    document.querySelectorAll('.delete').forEach(btn => btn.addEventListener('click', () => { 
       const id = btn.getAttribute('data-id'); 
-      if (confirm(`Excluir?`)) { contacts = contacts.filter(c => c.id != id); saveContacts(); renderContactsList(); showToast(t('contactDeleted')); } 
+      if (confirm(`Excluir contato?`)) { contacts = contacts.filter(c => c.id != id); saveContacts(); renderContactsList(); showToast(t('contactDeleted')); } 
     }));
   }
   function openContactsModal() { document.getElementById('contactsModal').style.display = 'flex'; renderContactsList(); }
@@ -388,57 +580,77 @@
   }
   
   // ======================= CRIPTOGRAFIA =======================
-  let encryptionKey = null, encryptionPassphrase = null; const ENC_SALT = "P2PSecureStaticSalt2025!";
+  let encryptionKey = null; const ENC_SALT = "P2PSecureStaticSalt2025!";
   async function deriveKeyFromPassphrase(passphrase) { const enc = new TextEncoder(); const keyMat = await crypto.subtle.importKey("raw", enc.encode(passphrase), "PBKDF2", false, ["deriveKey"]); const salt = enc.encode(ENC_SALT); return await crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: 100000, hash: "SHA-256" }, keyMat, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]); }
   async function encryptMessage(plainText) { if (!encryptionKey) return null; const iv = crypto.getRandomValues(new Uint8Array(12)); const encoded = new TextEncoder().encode(plainText); const encrypted = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, encryptionKey, encoded); const combined = new Uint8Array(iv.length + encrypted.byteLength); combined.set(iv); combined.set(new Uint8Array(encrypted), iv.length); return btoa(String.fromCharCode.apply(null, combined)); }
   async function decryptMessage(encryptedBase64) { if (!encryptionKey) return null; try { const binary = atob(encryptedBase64); const combined = new Uint8Array(binary.length); for (let i=0; i<binary.length; i++) combined[i]=binary.charCodeAt(i); const iv = combined.slice(0,12), cipher = combined.slice(12); const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, encryptionKey, cipher); return new TextDecoder().decode(decrypted); } catch(e) { return null; } }
-  async function setEncryption(passphrase) { if (!passphrase?.trim()) { encryptionKey = null; encryptionPassphrase = null; updateEncryptionUI(); return false; } try { encryptionKey = await deriveKeyFromPassphrase(passphrase); encryptionPassphrase = passphrase; updateEncryptionUI(); return true; } catch(e) { return false; } }
-  function disableEncryption() { encryptionKey = null; encryptionPassphrase = null; updateEncryptionUI(); showToast(t('encryptDisabled')); addSystemMessage(t('encryptDisabled')); }
-  function updateEncryptionUI() { const badge = document.getElementById('encryptionStatusBadge'), span = document.getElementById('encryptionBadgeText'); if (encryptionKey) { badge.className = "encrypt-badge"; span.innerText = "E2EE Ativo 🔒"; } else { badge.className = "encrypt-badge plain"; span.innerText = "Sem criptografia"; } }
+  async function setEncryption(passphrase) { if (!passphrase?.trim()) { encryptionKey = null; updateEncryptionUI(); return false; } try { encryptionKey = await deriveKeyFromPassphrase(passphrase); updateEncryptionUI(); return true; } catch(e) { return false; } }
+  function updateEncryptionUI() { const badge = document.getElementById('encryptionStatusBadge'), span = badge.querySelector('span'); if (encryptionKey) { badge.className = "encrypt-badge"; span.innerText = "E2EE Ativo 🔒"; } else { badge.className = "encrypt-badge plain"; span.innerText = "Sem criptografia"; } }
   
   // ======================= PEERJS =======================
   let peer = null, myId = null, dataConnection = null, connectedRemoteId = null, isConnected = false, currentFixedId = "";
   const STORAGE_FIXED_ID = "p2p_fixed_permanent_id", STORAGE_LAST_REMOTE = "p2p_last_remote_id";
   let remoteTypingTimeout = null;
-
-  function showToast(msg) { 
-    const tMsg = document.getElementById('toastMessage'); 
-    tMsg.innerText = msg; tMsg.style.display = 'block'; 
-    setTimeout(() => { tMsg.style.display = 'none'; }, 2500); 
-  }
-  function addSystemMessage(text) { const div = document.createElement('div'); div.className = 'system-message'; div.innerText = text; document.getElementById('messagesContainer').appendChild(div); scrollToBottom(); }
-  function addChatMessage(text, isLocal, timestamp = null) { 
-    const wrapper = document.createElement('div'); wrapper.className = `message-bubble ${isLocal ? 'message-right' : 'message-left'}`; 
-    const bubble = document.createElement('div'); bubble.className = 'bubble'; bubble.innerText = text; 
-    const timeSpan = document.createElement('div'); timeSpan.className = 'timestamp'; timeSpan.innerText = timestamp || new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }); 
-    wrapper.appendChild(bubble); wrapper.appendChild(timeSpan); document.getElementById('messagesContainer').appendChild(wrapper); scrollToBottom(); 
-  }
-  function scrollToBottom() { const c = document.getElementById('messagesContainer'); c.scrollTop = c.scrollHeight; }
-  function clearChatHistory() { const container = document.getElementById('messagesContainer'); while(container.firstChild) container.removeChild(container.firstChild); addSystemMessage(t('chatCleared')); }
+  let historyLoaded = false;
   
-  function updateConnectionStatusUI(statusText, isConnectedFlag, remoteId = '') { 
-    const badge = document.getElementById('connectionStatusBadge');
-    const badgeSpan = badge.querySelector('span'); 
-    const icon = badge.querySelector('i'); 
-    if (isConnectedFlag) { 
-      badgeSpan.innerText = `Conectado a ${remoteId.slice(0,8)}`; 
-      icon.className = 'fas fa-check-circle'; 
-      badge.classList.remove('status-offline');
-    } else { 
-      badgeSpan.innerText = t('notConnected'); 
-      icon.className = 'fas fa-plug'; 
-      badge.classList.add('status-offline');
-    } 
+  function updateConnectionStatusUI(isConnectedFlag, remoteId = '') { 
+    const badge = document.getElementById('connectionStatusBadge'); const badgeSpan = badge.querySelector('span'); const icon = badge.querySelector('i'); 
+    if (isConnectedFlag) { badgeSpan.innerText = `Conectado a ${remoteId.slice(0,8)}`; icon.className = 'fas fa-check-circle'; badge.classList.remove('status-offline'); } 
+    else { badgeSpan.innerText = t('notConnected'); icon.className = 'fas fa-plug'; badge.classList.add('status-offline'); } 
   }
-  
   function hideRemoteTyping() { document.getElementById('typingIndicatorArea').innerHTML = ''; }
   function showRemoteTyping() { document.getElementById('typingIndicatorArea').innerHTML = `<div class="typing-indicator"><i class="fas fa-pen-fancy"></i> ${t('typingFriend')}</div>`; scrollToBottom(); if(remoteTypingTimeout) clearTimeout(remoteTypingTimeout); remoteTypingTimeout = setTimeout(() => hideRemoteTyping(), 3000); }
   function sendTypingStatus(isTyping) { if(!isConnected || !dataConnection?.open) return; dataConnection.send({ type: 'typing', typing: isTyping }); }
-  function resetConnectionState() { dataConnection = null; isConnected = false; connectedRemoteId = null; updateConnectionStatusUI('Disconnected', false); hideRemoteTyping(); document.getElementById('messageInput').disabled = true; document.getElementById('sendBtn').disabled = true; }
+  function resetConnectionState() { dataConnection = null; isConnected = false; connectedRemoteId = null; updateConnectionStatusUI(false); hideRemoteTyping(); document.getElementById('messageInput').disabled = true; document.getElementById('sendBtn').disabled = true; historyLoaded = false; }
+  
+  async function loadHistoryForCurrentPeer(remotePeerId) {
+    if (!myId || !remotePeerId || historyLoaded) return;
+    const convId = getConversationId(myId, remotePeerId);
+    const messages = await getMessagesForConversation(convId, 50);
+    if (messages.length === 0) return;
+    const container = document.getElementById('messagesContainer');
+    const sysMsg = document.getElementById('initialSysMsg');
+    if (sysMsg && container.children.length === 1 && container.children[0] === sysMsg) sysMsg.remove();
+    const separator = document.createElement('div'); separator.className = 'system-message'; separator.innerText = `📜 Histórico (${messages.length} mensagens)`;
+    container.prepend(separator);
+    messages.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+    for (const msg of messages) {
+      const isLocal = msg.direction === 'sent';
+      const time = new Date(msg.timestamp).toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' });
+      addChatMessage(msg.text, isLocal, time);
+    }
+    scrollToBottom();
+    historyLoaded = true;
+  }
   
   function setupDataConnectionEvents(conn, remotePeerId) { 
-    conn.on('open', () => { isConnected = true; connectedRemoteId = remotePeerId; updateConnectionStatusUI('Connected', true, remotePeerId); addSystemMessage(t('connectedTo', { id: remotePeerId })); document.getElementById('messageInput').disabled = false; document.getElementById('sendBtn').disabled = false; document.getElementById('messageInput').focus(); localStorage.setItem(STORAGE_LAST_REMOTE, remotePeerId); }); 
-    conn.on('data', async (data) => { if (data.type === 'chat') { let finalText = data.text; if (data.encrypted && encryptionKey) { const decrypted = await decryptMessage(data.text); if (decrypted !== null) finalText = decrypted; else finalText = "🔒 [Falha]"; } else if (data.encrypted && !encryptionKey) finalText = "🔒 [Criptografado]"; addChatMessage(finalText, false, data.timestamp); } else if (data.type === 'typing') data.typing ? showRemoteTyping() : hideRemoteTyping(); }); 
+    conn.on('open', async () => { 
+      isConnected = true; connectedRemoteId = remotePeerId; 
+      updateConnectionStatusUI(true, remotePeerId); 
+      addSystemMessage(t('connectedTo', { id: remotePeerId })); 
+      document.getElementById('messageInput').disabled = false; 
+      document.getElementById('sendBtn').disabled = false; 
+      document.getElementById('messageInput').focus(); 
+      localStorage.setItem(STORAGE_LAST_REMOTE, remotePeerId); 
+      await loadHistoryForCurrentPeer(remotePeerId); 
+    }); 
+    conn.on('data', async (data) => { 
+      if (data.type === 'chat') { 
+        let finalText = data.text; 
+        let wasEncrypted = data.encrypted; 
+        if (data.encrypted && encryptionKey) { 
+          const decrypted = await decryptMessage(data.text); 
+          if (decrypted !== null) finalText = decrypted; 
+          else finalText = "🔒 [Falha]"; 
+        } else if (data.encrypted && !encryptionKey) finalText = "🔒 [Criptografado]"; 
+        addChatMessage(finalText, false, data.timestamp); 
+        const timestampISO = new Date().toISOString(); 
+        const convId = getConversationId(myId, connectedRemoteId); 
+        await saveMessage(convId, connectedRemoteId, 'received', finalText, timestampISO, wasEncrypted, false); 
+      } else if (data.type === 'typing') { 
+        data.typing ? showRemoteTyping() : hideRemoteTyping(); 
+      } 
+    }); 
     conn.on('close', () => { addSystemMessage(t('connectionClosed', { id: remotePeerId })); resetConnectionState(); }); 
     conn.on('error', (err) => { showToast(`Erro: ${err.message}`); resetConnectionState(); }); 
   }
@@ -446,70 +658,142 @@
   async function sendMessage() { 
     let text = document.getElementById('messageInput').value.trim(); 
     if(!text || !isConnected) return; 
-    const timestamp = new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }); 
-    let payload = { type:'chat', timestamp }; 
-    if(encryptionKey){ const encrypted = await encryptMessage(text); payload.text = encrypted; payload.encrypted = true; } 
-    else { payload.text = text; payload.encrypted = false; } 
-    dataConnection.send(payload); addChatMessage(text, true, timestamp); 
+    const timestampLocale = new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }); 
+    const timestampISO = new Date().toISOString();
+    let payload = { type:'chat', timestamp: timestampLocale }; 
+    let finalText = text, wasEncrypted = false;
+    if(encryptionKey){ const encrypted = await encryptMessage(text); payload.text = encrypted; payload.encrypted = true; wasEncrypted = true; finalText = text; } 
+    else { payload.text = text; payload.encrypted = false; wasEncrypted = false; } 
+    dataConnection.send(payload); addChatMessage(finalText, true, timestampLocale); 
+    const convId = getConversationId(myId, connectedRemoteId);
+    await saveMessage(convId, connectedRemoteId, 'sent', finalText, timestampISO, wasEncrypted, true);
     document.getElementById('messageInput').value = ''; sendTypingStatus(false); 
   }
   
   function connectToPeer(remoteId) { 
     if(!peer || !remoteId || remoteId === myId || isConnected) return; 
-    updateConnectionStatusUI('Connecting...', false); 
+    if (dataConnection && dataConnection.open) dataConnection.close();
     const conn = peer.connect(remoteId, { reliable: true }); 
     dataConnection = conn; setupDataConnectionEvents(conn, remoteId); 
   }
-  
   function getOrCreateFixedId() { let stored = localStorage.getItem(STORAGE_FIXED_ID); if (!stored) { stored = "p2p_" + Math.random().toString(36).substring(2, 12); localStorage.setItem(STORAGE_FIXED_ID, stored); } return stored; }
-  
   async function initPeer() { 
     if(peer) peer.destroy();
     peer = new Peer(currentFixedId, getPeerConfig());
-    peer.on('open', (id) => { myId = id; document.getElementById('myPeerId').innerText = myId; document.getElementById('fixedIdDisplay').innerText = myId; hidePreloader(); addSystemMessage(`✅ Seu ID Único está ativo.`); });
-    peer.on('connection', (conn) => { dataConnection = conn; setupDataConnectionEvents(conn, conn.peer); });
-    peer.on('error', (err) => { showToast(err.message); hidePreloader(); });
+    peer.on('open', (id) => { 
+      myId = id; 
+      document.getElementById('myPeerId').innerText = myId; 
+      document.getElementById('fixedIdDisplay').innerText = myId; 
+      hidePreloader(); 
+      addSystemMessage(`✅ Seu ID Único está ativo.`); 
+    });
+    peer.on('connection', (conn) => { 
+      if (dataConnection && dataConnection.open) dataConnection.close(); 
+      dataConnection = conn; 
+      setupDataConnectionEvents(conn, conn.peer); 
+    });
+    peer.on('error', (err) => { 
+      showToast(`Erro PeerJS: ${err.message}`); 
+      showPreloaderError(); 
+      hidePreloader(); 
+    });
   }
+  
+  // ======================= SCROLL BUTTON =======================
+  const messagesContainer = document.getElementById('messagesContainer');
+  const scrollBtn = document.getElementById('scrollToBottomBtn');
+  messagesContainer.addEventListener('scroll', () => {
+    const isNearBottom = messagesContainer.scrollHeight - messagesContainer.scrollTop - messagesContainer.clientHeight < 100;
+    scrollBtn.style.display = isNearBottom ? 'none' : 'flex';
+  });
+  scrollBtn.addEventListener('click', () => { messagesContainer.scrollTo({ top: messagesContainer.scrollHeight, behavior: 'smooth' }); });
+  
+  // ======================= INBOX MODAL =======================
+  let currentConversationOffset = 0;
+  let currentConversationId = null;
+  async function renderInbox() {
+    const convs = await getConversationsList();
+    const body = document.getElementById('inboxModalBody');
+    if (convs.length === 0) { body.innerHTML = `<div class="system-message">📭 ${t('noConversations')}</div>`; return; }
+    body.innerHTML = `<div class="inbox-search"><input type="text" id="inboxSearchInput" placeholder="🔍 Buscar por contato..."></div><div class="conversation-list" id="conversationList"></div>`;
+    const listDiv = document.getElementById('conversationList');
+    function renderList(filter = '') {
+      const filtered = convs.filter(c => c.contactName.toLowerCase().includes(filter.toLowerCase()) || c.remotePeerId.includes(filter));
+      listDiv.innerHTML = '';
+      filtered.forEach(conv => {
+        const div = document.createElement('div'); div.className = 'conversation-item';
+        const preview = conv.lastMessage.length > 40 ? conv.lastMessage.slice(0,40)+'...' : conv.lastMessage;
+        const time = new Date(conv.lastTimestamp).toLocaleDateString();
+        div.innerHTML = `<div class="conversation-info"><div class="conversation-name">${escapeHtml(conv.contactName)}</div><div class="conversation-preview">${escapeHtml(preview)}</div><div class="conversation-time">${time}</div></div><div style="display:flex; gap:6px;">${conv.unreadCount > 0 ? `<span class="unread-badge">${conv.unreadCount}</span>` : ''}<button class="export-conv-btn" data-convid="${conv.conversationId}" data-peer="${conv.remotePeerId}" title="Exportar"><i class="fas fa-download"></i></button><button class="delete-conv-btn" data-convid="${conv.conversationId}" title="Apagar"><i class="fas fa-trash"></i></button></div>`;
+        div.addEventListener('click', (e) => { if(!e.target.closest('.delete-conv-btn') && !e.target.closest('.export-conv-btn')) openConversationHistory(conv.conversationId, conv.remotePeerId); });
+        listDiv.appendChild(div);
+      });
+      document.querySelectorAll('.delete-conv-btn').forEach(btn => btn.addEventListener('click', async (e) => { e.stopPropagation(); const convId = btn.getAttribute('data-convid'); if(confirm('Apagar toda a conversa?')) { await deleteConversation(convId); renderInbox(); showToast('Conversa removida'); } }));
+      document.querySelectorAll('.export-conv-btn').forEach(btn => btn.addEventListener('click', async (e) => { e.stopPropagation(); const convId = btn.getAttribute('data-convid'); const peer = btn.getAttribute('data-peer'); await exportConversation(convId, peer); }));
+    }
+    renderList();
+    document.getElementById('inboxSearchInput').addEventListener('input', (e) => renderList(e.target.value));
+  }
+  async function openConversationHistory(conversationId, remotePeerId) {
+    currentConversationId = conversationId;
+    currentConversationOffset = 0;
+    await markConversationRead(conversationId);
+    updateUnreadBadge();
+    await loadConversationMessages();
+  }
+  async function loadConversationMessages() {
+    const body = document.getElementById('inboxModalBody');
+    const messages = await getMessagesForConversation(currentConversationId, 30, currentConversationOffset);
+    const hasMore = messages.length === 30;
+    body.innerHTML = `<button class="history-back" id="historyBackBtn"><i class="fas fa-arrow-left"></i> Voltar</button><div class="message-history" id="historyMessages"></div>${hasMore ? '<div class="load-more-btn" id="loadMoreBtn">Carregar mais...</div>' : ''}`;
+    const historyDiv = document.getElementById('historyMessages');
+    messages.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+    for (const msg of messages) {
+      const msgDiv = document.createElement('div'); msgDiv.className = `message-bubble ${msg.direction === 'sent' ? 'message-right' : 'message-left'}`;
+      const bubble = document.createElement('div'); bubble.className = 'bubble'; bubble.innerText = msg.text;
+      const timeSpan = document.createElement('div'); timeSpan.className = 'timestamp'; timeSpan.innerText = new Date(msg.timestamp).toLocaleString();
+      msgDiv.appendChild(bubble); msgDiv.appendChild(timeSpan);
+      historyDiv.appendChild(msgDiv);
+    }
+    historyDiv.scrollTop = historyDiv.scrollHeight;
+    document.getElementById('historyBackBtn').onclick = () => renderInbox();
+    if (hasMore) document.getElementById('loadMoreBtn').onclick = async () => { currentConversationOffset += 30; await loadConversationMessages(); };
+  }
+  function openInboxModal() { document.getElementById('inboxModal').style.display = 'flex'; renderInbox(); }
+  function closeInboxModal() { document.getElementById('inboxModal').style.display = 'none'; }
   
   // ======================= BINDINGS =======================
   function bindEvents() {
-    document.getElementById('toggleDrawerBtn').onclick = () => { 
-      const drawer = document.getElementById('drawerContainer');
-      drawer.classList.toggle('collapsed');
-      document.getElementById('toggleDrawerBtn').querySelector('i').className = drawer.classList.contains('collapsed') ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
-    };
+    document.getElementById('toggleDrawerBtn').onclick = () => { const drawer = document.getElementById('drawerContainer'); drawer.classList.toggle('collapsed'); document.getElementById('toggleDrawerBtn').querySelector('i').className = drawer.classList.contains('collapsed') ? 'fas fa-chevron-down' : 'fas fa-chevron-up'; };
     document.getElementById('connectBtn').onclick = () => connectToPeer(document.getElementById('remotePeerId').value.trim());
     document.getElementById('disconnectBtn').onclick = () => { if(dataConnection) dataConnection.close(); resetConnectionState(); };
     document.getElementById('sendBtn').onclick = sendMessage;
     document.getElementById('messageInput').onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
-    document.getElementById('copyIdBtn').onclick = () => { navigator.clipboard.writeText(myId); showToast(t('activeCopied')); };
+    document.getElementById('copyIdBtn').onclick = () => { navigator.clipboard.writeText(myId); showToast('ID copiado'); };
     document.getElementById('clearChatBtn').onclick = clearChatHistory;
     document.getElementById('emojiPickerBtn').onclick = () => { document.getElementById('emojiPicker').style.display = 'flex'; };
     document.getElementById('closeEmojiPickerBtn').onclick = () => { document.getElementById('emojiPicker').style.display = 'none'; };
     document.getElementById('contactsBtn').onclick = openContactsModal;
     document.getElementById('closeModalBtn').onclick = closeContactsModal;
     document.getElementById('saveContactBtn').onclick = handleSaveContact;
-    document.getElementById('copyFixedIdBtn').onclick = () => { navigator.clipboard.writeText(myId); showToast(t('fixedCopied')); };
+    document.getElementById('copyFixedIdBtn').onclick = () => { navigator.clipboard.writeText(myId); showToast('ID Único copiado'); };
     document.getElementById('resetFixedIdBtn').onclick = () => { if(confirm(t('confirmResetFixed'))) { localStorage.removeItem(STORAGE_FIXED_ID); currentFixedId = getOrCreateFixedId(); initPeer(); } };
     document.getElementById('setEncryptionBtn').onclick = () => { const p = prompt(t('encryptionPrompt')); if(p !== null) setEncryption(p).then(() => addSystemMessage(t('encryptEnabled'))); };
     document.getElementById('recallLastPeerBtn').onclick = () => { const last = localStorage.getItem(STORAGE_LAST_REMOTE); if(last) document.getElementById('remotePeerId').value = last; };
-    
-    // Typing indicator
+    document.getElementById('inboxBtn').onclick = openInboxModal;
+    document.getElementById('closeInboxBtn').onclick = closeInboxModal;
     let localTypingTimer = null;
     document.getElementById('messageInput').oninput = () => { if(!isConnected) return; if(localTypingTimer) clearTimeout(localTypingTimer); sendTypingStatus(true); localTypingTimer = setTimeout(() => sendTypingStatus(false), 1800); };
   }
   
-  function startApp() { 
+  async function startApp() { 
+    await initDB();
     currentFixedId = getOrCreateFixedId(); 
     loadContacts(); 
     bindEvents(); 
     const grid = document.getElementById('emojiGrid'); 
     const emojis = ["😀","😃","😄","😁","😆","😅","😂","🤣","😊","😇","🙂","🙃","😉","😌","😍","🥰","😘","😗","😙","😚","😋","😛","😝","😜","🤪","🤨","🧐","🤓","😎","🤩","🥳","😏","😒","😞","😔","😟","😕","🙁","☹️","😣","😖","😫","😩","🥺","😢","😭","😤","😠","😡","🤬","🤯","😳","🥵","🥶","😱","😨","😰","😥","😓","🤗","🤔","🤭","🤫","🤥","😶","😐","😑","😬","🙄","😯","😦","😧","😮","😲","🥱","😴","🤤","😪","😵","🤐","🥴","🤢","🤮","🤧","😷","🤒","🤕","🤑","🤠","😈","👿","👹","👺","💀","👻","👽","🤖","💩","😺","😸","😹","😻","😼","😽","🙀","😿","😾","🙈","🙉","🙊","💋","💌","💘","💝","💖","💗","💓","💞","💕","💟","❤️","🧡","💛","💚","💙","💜","🤎","🖤","🤍","💯","❤️‍🔥","💔","❣️","💭","👋","🤚","✋","🖖","👌","🤌","🤏","✌️","🤞","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","👍","👎","✊","👊","🤛","🤜","👏","🙌","👐","🤲","🤝","🙏","✍️","💅","🤳","💪","🦾","🦿","🦵","🦶","👂","🦻","👃","🧠","🦷","🦴","👀","👁️","👅","👄","💋","🫀","🫁","🗣️","👤","👥","🫂","👶","🧒","👦","👧","🧑","👩","🧔","👨","🧓","👴","👵"];
-    emojis.slice(0, 60).forEach(emoji => { 
-      const btn = document.createElement('div'); btn.className = 'emoji-item'; btn.textContent = emoji; 
-      btn.onclick = () => { document.getElementById('messageInput').value += emoji; document.getElementById('emojiPicker').style.display = 'none'; }; 
-      grid.appendChild(btn); 
-    }); 
+    emojis.slice(0, 60).forEach(emoji => { const btn = document.createElement('div'); btn.className = 'emoji-item'; btn.textContent = emoji; btn.onclick = () => { document.getElementById('messageInput').value += emoji; document.getElementById('emojiPicker').style.display = 'none'; }; grid.appendChild(btn); }); 
     initPeer(); 
   }
   startApp();
